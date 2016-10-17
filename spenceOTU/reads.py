@@ -16,6 +16,16 @@ def makeRE(sequence):
 	    exportSeq += d
     return exportSeq
 
+def getHeaderParams(header):
+    spaceSplit = header.split(' ')
+    currentSeq = spaceSplit[0].replace('>','')
+    currentHeader = header.strip()
+    if (len(spaceSplit) > 1) and ('#' in spaceSplit[1]):
+        currentCluster = spaceSplit[1].split('#')[0]
+    else:
+        currentCluster = None
+    return currentHeader, currentSeq, currentCluster
+
 # Import data from fasta file and save in header and sequence variables
 def importFasta(inputFileName):
     reads = []
@@ -25,33 +35,21 @@ def importFasta(inputFileName):
     currentHeader = ''
     currentCluster = ''
     for line in inputFile:
-	if '>' in line:
-	    spaceSplit = line.split(' ')
-	    currentSeq = spaceSplit[0].replace('>','')
-	    currentHeader = line.strip()
-	    if (len(spaceSplit) > 1) and ('#' in spaceSplit[1]):
-		currentCluster = spaceSplit[1].split('#')[0]
-	    else:
-		currentCluster = None
-	    currentDNA = ''
-	else:
-	    if '>' in next(inputFile):
-		currentDNA += line.strip()
-		readObj = fastaSeq(currentHeader, currentDNA, currentSeq, currentCluster)
-		reads.append(readObj)
-	    else:
-		currentDNA += line.strip()
+        if '>' in line:
+            if currentDNA != '':
+                readObj = fastaSeq(currentHeader, currentDNA, currentSeq,
+					currentCluster)
+                reads.append(readObj)
+            currentHeader, currentSeq, currentCluster = getHeaderParams(line)
+            currentDNA = ''
+        else:
+            currentDNA += line.strip()
+    if currentDNA != '':
+        readObj = fastaSeq(currentHeader, currentDNA, currentSeq,
+				currentCluster)
+        reads.append(readObj)
     inputFile.close()
     return reads
-
-def importFasta(inputFileName):
-    reads = []
-    inputFile = open(inputFileName, 'r')
-    currentSeq = ''
-    currentHeader = ''
-    currentCluster = ''
-    for line in inputFile:
-
 
 # Parse the joined fasta reads for designed primer sequence structure
 # Output: sequences that match the designed structure
