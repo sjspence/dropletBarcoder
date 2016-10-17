@@ -18,7 +18,7 @@ def makeRE(sequence):
 
 def getHeaderParams(header):
     spaceSplit = header.split(' ')
-    currentSeq = spaceSplit[0].replace('>','')
+    currentSeq = spaceSplit[0].strip().replace('>','')
     currentHeader = header.strip()
     if (len(spaceSplit) > 1) and ('#' in spaceSplit[1]):
         currentCluster = spaceSplit[1].split('#')[0]
