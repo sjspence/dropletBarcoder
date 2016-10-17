@@ -20,6 +20,7 @@ def makeRE(sequence):
 def importFasta(inputFileName):
     reads = []
     inputFile = open(inputFileName,'r')
+    currentDNA = ''
     currentSeq = ''
     currentHeader = ''
     currentCluster = ''
@@ -28,11 +29,25 @@ def importFasta(inputFileName):
 	    currentSeq = line.split(' ')[0].replace('>','')
 	    currentHeader = line.strip()
 	    currentCluster = line.split(' ')[1].split('#')[0]
+	    currentDNA = ''
 	else:
-	    readObj = fastaSeq(currentSeq, currentCluster, currentHeader, line.strip())
-	    reads.append(readObj)
+	    if '>' in next(inputFile):
+		currentDNA += line.strip()
+		readObj = fastaSeq(currentHeader, currentDNA, currentSeq, currentCluster)
+		reads.append(readObj)
+	    else:
+		currentDNA += line.strip()
     inputFile.close()
     return reads
+
+def importFasta(inputFileName):
+    reads = []
+    inputFile = open(inputFileName, 'r')
+    currentSeq = ''
+    currentHeader = ''
+    currentCluster = ''
+    for line in inputFile:
+
 
 # Parse the joined fasta reads for designed primer sequence structure
 # Output: sequences that match the designed structure
@@ -53,8 +68,8 @@ def removeFwdRevPrimer(reads, fwd, rev):
 	else:
 	    continue
 	splitSeqRev = re.split(reverse,fwdRemoved)
-	newRead = fastaSeq(read.seq_name, read.cluster, read.header,
-			splitSeqRev[0])
+	newRead = fastaSeq(read.header, splitSeqRev[0], read.seq_id, 
+				read.cluster)
 	usableReads.append(newRead)
     return usableReads
 
@@ -69,8 +84,8 @@ def removeFwdPrimer(reads, fwd):
         else:
             continue
         splitSeq = re.split(primer, read.seq)
-	newRead = fastaSeq(read.seq_name, read.cluster, read.header,
-			   splitSeq[1])
+	newRead = fastaSeq(read.header, splitSeq[1], read.seq_id,
+				read.cluster)
 	usableReads.append(newRead)
     return usableReads
 
@@ -80,7 +95,8 @@ def trimLength(reads, outputLength):
     for read in reads:
 	if len(read.seq) >= outputLength:
 	    newSeq = read.seq[0:outputLength]
-	    newRead = fastaSeq(read.seq_name, read.cluster, read.header, newSeq)
+	    newRead = fastaSeq(read.header, newSeq, read.seq_id,
+				read.cluster)
 	    returnReads.append(newRead)
     return returnReads
 
@@ -89,13 +105,14 @@ def selectReads(sampList, reads):
     outReads = []
     for s in sampList:
         for r in reads:
-            if s in r.seq_name:
+            if s in r.seq_id:
                 outReads.append(r)
     return outReads
 
 class fastaSeq(object):
-    def __init__(self, seq_name, cluster, header, seq):
-	self.seq_name = seq_name
-	self.cluster = cluster
+    #def __init__(self, seq_name=None, cluster=None, header, seq):
+    def __init__(self, header, seq, seq_id=None, cluster=None):
 	self.header = header
 	self.seq = seq
+	self.seq_id = seq_id
+	self.cluster = cluster

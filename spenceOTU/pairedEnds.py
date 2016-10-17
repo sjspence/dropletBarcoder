@@ -23,7 +23,7 @@ def pairConcatenate(reads1, reads2):
 	if c in clusters2:
 	    newSeq = clusters1[c].seq + revComplement(clusters2[c].seq)
 	    newSeqN = clusters1[c].seq + 'N' + revComplement(clusters2[c].seq)
-	    newRead = pairedSeq(clusters1[c].seq_name, clusters2[c].seq_name,
+	    newRead = pairedSeq(clusters1[c].seq_id, clusters2[c].seq_id,
 				c, clusters1[c].header, clusters2[c].header,
 				newSeq, newSeqN)
 	    pairedReads.append(newRead)
