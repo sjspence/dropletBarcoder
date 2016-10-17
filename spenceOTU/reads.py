@@ -26,9 +26,13 @@ def importFasta(inputFileName):
     currentCluster = ''
     for line in inputFile:
 	if '>' in line:
-	    currentSeq = line.split(' ')[0].replace('>','')
+	    spaceSplit = line.split(' ')
+	    currentSeq = spaceSplit[0].replace('>','')
 	    currentHeader = line.strip()
-	    currentCluster = line.split(' ')[1].split('#')[0]
+	    if (len(spaceSplit) > 1) and ('#' in spaceSplit[1]):
+		currentCluster = spaceSplit[1].split('#')[0]
+	    else:
+		currentCluster = None
 	    currentDNA = ''
 	else:
 	    if '>' in next(inputFile):
