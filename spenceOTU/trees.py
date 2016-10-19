@@ -1,4 +1,3 @@
-
 def makeTreeConstraint(inFileName, outFileName):
     inFile = open(inFileName, 'r')
     taxAssignments = []
@@ -35,4 +34,21 @@ def makeTreeConstraint(inFileName, outFileName):
         for w in taxBinary:
             tBins.append(''.join(w))
         outFile.write(">" + seqID[pos] + "\n" + ''.join(tBins) + "\n")
+    outFile.close()
+
+def alignmentToSequence(inFileName, outFileName):
+    inFile = open(inFileName, 'r')
+    bases = {'A':'A', 'U':'T', 'T':'T', 'G':'G', 'C':'C', 'N':'N', '\n':'',
+		'\r':'', '-':'', '.':''}
+    header = ''
+    sequence = ''
+    for line in inFile:
+        if '>' in line:
+            header = line
+        else:
+            for i in line:
+                sequence += bases[i]
+    outFile = open(outFileName, 'w')
+    outFile.write(header + sequence)
+    inFile.close()
     outFile.close()

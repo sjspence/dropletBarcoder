@@ -6,4 +6,4 @@ from .utilities import clusterWithUsearch
 from .otuTables import importUsearchHits, importTaxonomy, buildOTUtable, \
 	invertHits
 from .itol import itolHeatmap
-from .trees import makeTreeConstraint
+from .trees import makeTreeConstraint, alignmentToSequence
