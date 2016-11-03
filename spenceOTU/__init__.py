@@ -1,7 +1,7 @@
 from .reads import importFasta, removeFwdPrimer, removeFwdRevPrimer, \
 	trimLength, selectReads
 from .pairedEnds import pairConcatenate, readPairList
-from .io import exportFasta, exportPairedFasta
+from .io import exportFasta, exportPairedFasta, exportOTUtable
 from .utilities import clusterWithUsearch
 from .otuTables import importUsearchHits, importTaxonomy, buildOTUtable, \
 	invertHits
