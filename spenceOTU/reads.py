@@ -91,6 +91,12 @@ def removeFwdPrimer(reads, fwd):
 	usableReads.append(newRead)
     return usableReads
 
+# Split a read by a provided degenerate primer sequence
+def splitByDegenerate(seq, degenerateSeq):
+    REseq = makeRE(degenerateSeq)
+    newSeq = re.split(REseq, seq)
+    return newSeq
+
 # Trim sequences to a specified length
 def trimLength(reads, outputLength):
     returnReads = []
