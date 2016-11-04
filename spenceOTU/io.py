@@ -16,7 +16,7 @@ def exportPairedFasta(pairedReads, outFileName, outFileNameN):
     outFile.close()
     outFileN.close()
 
-def exportOTUtable(df, outFileName):
+def exportOTUtable(df, taxDict, outFileName):
     outFile = open(outFileName, 'w')
     outFile.write('\t')
     outFile.write('\t'.join(df.columns.values) + '\n')
@@ -24,4 +24,4 @@ def exportOTUtable(df, outFileName):
         index, data = row    
         outFile.write(index + '\t')
         outFile.write('\t'.join(map(str, data.tolist())) + '\t')
-        outFile.write('\t'.join(tax2[index]) + '\n')
+        outFile.write('\t'.join(taxDict[index]) + '\n')
