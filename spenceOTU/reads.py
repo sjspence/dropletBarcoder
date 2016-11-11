@@ -81,11 +81,11 @@ def removeFwdPrimer(reads, fwd):
     usableReads = []
     primer = makeRE(fwd)
     for read in reads:
-        if re.search(primer, read.seq[0:len(primer)]):
-            pass
-        else:
+        if not re.search(primer, read.seq[0:len(primer)]):
             continue
         splitSeq = re.split(primer, read.seq)
+	if len(splitSeq[1]) == 0:
+	    continue
 	newRead = fastaSeq(read.header, splitSeq[1], read.seq_id,
 				read.cluster)
 	usableReads.append(newRead)
