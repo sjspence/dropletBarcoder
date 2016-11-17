@@ -16,10 +16,14 @@ def exportPairedFasta(pairedReads, outFileName, outFileNameN):
     outFile.close()
     outFileN.close()
 
-def exportOTUtable(df, taxDict, outFileName):
+def exportOTUtable(df, taxDict, taxType, outFileName):
     outFile = open(outFileName, 'w')
     outFile.write('\t')
-    outFile.write('\t'.join(df.columns.values) + '\n')
+    outFile.write('\t'.join(df.columns.values))
+    if taxType == 'mothur':
+	outFile.write('taxonomy\tprobability\n')
+    else:
+	outFile.write('taxonomy\n'
     for row in df.iterrows():
         index, data = row    
         outFile.write(index + '\t')
