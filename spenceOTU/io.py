@@ -23,7 +23,7 @@ def exportOTUtable(df, taxDict, taxType, outFileName):
     if taxType == 'mothur':
 	outFile.write('taxonomy\tprobability\n')
     else:
-	outFile.write('taxonomy\n'
+	outFile.write('taxonomy\n')
     for row in df.iterrows():
         index, data = row    
         outFile.write(index + '\t')
