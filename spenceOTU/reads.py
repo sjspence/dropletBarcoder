@@ -113,7 +113,7 @@ def selectSamples(sampList, reads):
     outReads = []
     for s in sampList:
         for r in reads:
-            if s in r.seq_id:
+            if s == r.seq_id.split('_')[0]:
                 outReads.append(r)
     return outReads
 
@@ -122,7 +122,7 @@ def removeSamples(sampList, reads):
     outReads = []
     for s in sampList:
         for r in reads:
-            if s not in r.seq_id:
+            if s != r.seq_id.split('_')[0]:
                 outReads.append(r)
     return outReads
 
