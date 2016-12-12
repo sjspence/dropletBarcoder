@@ -120,10 +120,13 @@ def selectSamples(sampList, reads):
 # Remove reads that map to a provided sample list, return remaining reads
 def removeSamples(sampList, reads):
     outReads = []
-    for s in sampList:
-        for r in reads:
-            if s != r.seq_id.split('_')[0]:
-                outReads.append(r)
+    for r in reads:
+        match = False
+        for s in sampList:
+            if s == r.seq_id.split('_')[0]:
+                match = True
+        if not match:
+            outReads.append(r)
     return outReads
 
 class fastaSeq(object):
