@@ -109,11 +109,20 @@ def trimLength(reads, outputLength):
     return returnReads
 
 # Select reads based on provided sample list, return selected reads
-def selectReads(sampList, reads):
+def selectSamples(sampList, reads):
     outReads = []
     for s in sampList:
         for r in reads:
             if s in r.seq_id:
+                outReads.append(r)
+    return outReads
+
+# Remove reads that map to a provided sample list, return remaining reads
+def removeSamples(sampList, reads):
+    outReads = []
+    for s in sampList:
+        for r in reads:
+            if s not in r.seq_id:
                 outReads.append(r)
     return outReads
 

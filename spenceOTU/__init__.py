@@ -1,5 +1,5 @@
 from .reads import importFasta, removeFwdPrimer, removeFwdRevPrimer, \
-	trimLength, selectReads, splitByDegenerate
+	trimLength, selectSamples, removeSamples, splitByDegenerate
 from .pairedEnds import pairConcatenate, readPairList
 from .io import exportFasta, exportPairedFasta, exportOTUtable
 from .utilities import clusterWithUsearch
