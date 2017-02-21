@@ -4,6 +4,20 @@ import re
 degenerate = {'R':'AG', 'Y':'CT', 'S':'GC', 'W':'AT', 'K':'GT',
 		'M':'AC', 'B':'CGT', 'D':'AGT', 'H':'ACT', 'V':'ACG',
 		'N':'ACGT'}
+alt_map = {'ins':'0'}
+complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A', 'Y':'R', 'R':'Y',
+		'S':'S', 'W':'W', 'K':'M', 'M':'K', 'B':'V', 'V':'B', 
+		'D':'H', 'H':'D', 'N':'N'} 
+
+def revComplement(seq):    
+    for k,v in alt_map.iteritems():
+        seq = seq.replace(k,v)
+    bases = list(seq) 
+    bases = reversed([complement.get(base,base) for base in bases])
+    bases = ''.join(bases)
+    for k,v in alt_map.iteritems():
+        bases = bases.replace(v,k)
+    return bases
 
 def makeRE(sequence):
     exportSeq = ''
@@ -89,6 +103,28 @@ def removeFwdPrimer(reads, fwd):
 	newRead = fastaSeq(read.header, splitSeq[1], read.seq_id,
 				read.cluster)
 	usableReads.append(newRead)
+    return usableReads
+
+# Parse the joined fasta reads for designed primer sequence structure
+# Output: sequences that match the designed structure
+def filtBarcodePrimers(reads, bcLength, fwd, rev):
+    usableReads = []
+    forward = makeRE(fwd)
+    reverse = makeRE(revComplement(rev))
+    endFwdLoc = bcLength + len(forward)
+    for read in reads:
+        if (re.search(forward, read.seq[bcLength:endFwdLoc]) and 
+		re.search(reverse,
+		read.seq[len(read.seq)-len(reverse):len(read.seq)])):
+            pass
+        else:
+            continue
+        fwdRemoved = re.split(forward, read.seq)[1]
+        splitSeqRev = re.split(reverse, fwdRemoved)[0]
+	newHeader = read.header + ' droplet_bc=' + read.seq[0:bcLength]
+        newRead = fastaSeq(newHeader, splitSeqRev, read.seq_id,
+                                read.cluster)
+        usableReads.append(newRead)
     return usableReads
 
 # Split a read by a provided degenerate primer sequence
