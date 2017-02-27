@@ -1,9 +1,9 @@
 from distutils.core import setup
 
 setup(
-    name='dropletBarcoder',
+    name='epicBarcoder',
     version='0.1dev',
-    packages=['dropletBarcoder', ],
+    packages=['epicBarcoder', ],
     license='MIT',
     install_requires=['biopython',
                       'matplotlib',
