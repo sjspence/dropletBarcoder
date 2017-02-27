@@ -1,4 +1,4 @@
-dropletBarcoder - helper functions for calling OTUs and visualizing trees
+epicBarcoder - helper functions for calling OTUs and visualizing trees
 ===========================================================
 
 Description
