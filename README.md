@@ -1,5 +1,5 @@
-epicBarcoder - helper functions for calling OTUs and visualizing trees
-===========================================================
+epicBarcoder - helper functions for processing droplet barcode data
+===================================================================
 
 Description
 -----------
@@ -15,9 +15,13 @@ Takes a fasta input, see individual function documentation for additional utilit
 Requirements
 ------------
 
-Tested on Python 2.
-
-Depends on matplotlib, fasttree, numpy, pandas and usearch.
+Tested on Python 3.
+Dependencies:
+- matplotlib
+- fasttree
+- numpy
+- pandas
+- usearch 9.2+
 
 
 Installation
