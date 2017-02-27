@@ -1,4 +1,4 @@
-spenceOTU - helper functions for calling OTUs and visualizing trees
+dropletBarcoder - helper functions for calling OTUs and visualizing trees
 ===========================================================
 
 Description
