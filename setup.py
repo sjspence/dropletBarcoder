@@ -1,9 +1,9 @@
 from distutils.core import setup
 
 setup(
-    name='spenceOTU',
+    name='dropletBarcoder',
     version='0.1dev',
-    packages=['spenceOTU', ],
+    packages=['dropletBarcoder', ],
     license='MIT',
     install_requires=['biopython',
                       'matplotlib',
