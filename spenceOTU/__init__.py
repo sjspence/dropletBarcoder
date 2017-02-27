@@ -8,3 +8,4 @@ from .otuTables import importUsearchHits, importTaxonomy, buildOTUtable, \
 	invertHits
 from .itol import itolHeatmap
 from .trees import makeTreeConstraint, alignmentToSequence
+from .dereplicate import getUniqueSeqs, uniqueSeqsToOTU
