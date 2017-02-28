@@ -3,10 +3,12 @@ import subprocess
 from collections import defaultdict
 import epride as ep
 
+
 def getExtension(fileName):
     fileName = fileName.split('.')
     fileExt = '.' + fileName[len(fileName)-1]
     return fileExt
+
 
 def clusterWithUsearch(usearchPath, inFile, percIdentity):
     env = os.environ
@@ -18,6 +20,7 @@ def clusterWithUsearch(usearchPath, inFile, percIdentity):
                      "-sort", "length", "-id", percIdentity,
                      "-centroids", outFile, "-uc",
                      clustFile], env=env)
+
 
 def move_barcodes_and_type_to_fasta_id(bc_seq, bridge_dict):
     bridge_dict = {key: ep.expand_primers(ep.reverse_complement(val))
@@ -70,3 +73,47 @@ def add_otus_to_fasta(seq_file, uc_file, output_file):
         new_seq_id = "{} OTU={}".format(seq_id.strip(), seed_id)
         seq_acc.append([new_seq_id, seq])
     ep.write_fasta(seq_acc, output_file)
+
+
+def process_mapping_file(mapping_file):
+    sampIDs = []
+    mapping = {}
+    readCounts = {}
+    with open(mapping_file, 'r') as inFile:
+        for line in inFile:
+            if '#' not in line:
+                line = line.strip().split('\t')
+                mapping[line[1]] = line[0].replace('_', 's')
+                readCounts[line[1]] = 0
+                sampIDs.append(line[0].replace('_', 's'))
+    return [sampIDs, mapping, readCounts]
+
+def process_fastq_and_mapping_file(input_file, output_file, mapping_file, quality_summary_file):
+    sampIDs, mapping, readCounts = process_mapping_file(mapping_file)
+    with open(input_file, 'r') as inFile:
+        with open(output_file, 'w') as outFile:
+            i = 0
+            j = 0
+            nextSeq = False
+            for line in inFile:
+                if nextSeq:
+                    outFile.write(line)
+                    nextSeq = False
+                if i % 4 == 0:
+                    for bc in mapping:
+                        if bc in line:
+                            readCounts[bc] += 1
+                            newLine = line.strip().replace('@', '>' + mapping[bc] + '_' + str(j) + ' ')
+                            newLine = newLine + ' orig_bc=' + bc + ' new_bc=' + bc + ' bc_diffs=0\n'
+                            outFile.write(newLine)
+                            nextSeq = True
+                            j += 1
+                i += 1
+    total = 0
+    with open(quality_summary_file, 'w') as summaryFile:
+        for s in sampIDs:
+            for bc in mapping:
+                if mapping[bc] == s:
+                    summaryFile.write(s + '\t' + str(readCounts[bc]) + '\n')
+                    total += readCounts[bc]
+        summaryFile.write('Total\t' + str(total))
