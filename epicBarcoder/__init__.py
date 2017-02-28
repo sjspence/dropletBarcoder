@@ -9,3 +9,4 @@ from .otuTables import importUsearchHits, importTaxonomy, buildOTUtable, \
 from .itol import itolHeatmap
 from .trees import makeTreeConstraint, alignmentToSequence
 from .dereplicate import getUniqueSeqs, uniqueSeqsToOTU
+from .parallel import run_array_job, run_batch_job
