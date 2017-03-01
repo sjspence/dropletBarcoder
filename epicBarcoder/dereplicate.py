@@ -5,14 +5,14 @@ def getUniqueSeqs(inReads, outFasta):
     uniqueReads = []
     outFile = open(outFasta, 'w')
     for read in inReads:
-	if read.seq not in uniqueSeqs:
-	    uniqueSeqs[read.seq] = [read]
-	else:
-	    uniqueSeqs[read.seq].append(read)
+        if read.seq not in uniqueSeqs:
+            uniqueSeqs[read.seq] = [read]
+        else:
+            uniqueSeqs[read.seq].append(read)
     for u in sorted(uniqueSeqs, key=lambda k: len(uniqueSeqs[k]), reverse=True):
-	firstRead = uniqueSeqs[u][0]
-	outFile.write(firstRead.header + ';size=' + str(len(uniqueSeqs[u])) + \
-			';\n' + firstRead.seq + '\n')
+        firstRead = uniqueSeqs[u][0]
+        outFile.write(firstRead.header + ';size=' + str(len(uniqueSeqs[u])) + \
+                        ';\n' + firstRead.seq + '\n')
     outFile.close()
     return uniqueSeqs
 

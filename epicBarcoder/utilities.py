@@ -162,3 +162,17 @@ def output_abunds_and_combinations(input_file, output_file):
     connections['Color'] = '#ff0000'
     connections['Label'] = 'Label'
     connections.to_csv(output_file, header=None, index=None)
+
+
+def output_functions(input_file):
+    a = pd.read_csv(input_file, sep="\t", header=None)
+    b = a[~(a[1].isnull()) & ~(a[3].isnull()) & ~(a[1].str.contains(",", na=False)) & ~(a[3].str.contains(",", na=False))]
+    b.columns = ['Barcode', 'OTU', 'Euk_OTU', 'Func']
+    c = b.groupby('OTU')['Func'].value_counts()
+    c.name = 'Count'
+    c = c.reset_index()
+    d = pd.pivot_table(c, values='Count', index='OTU', columns='Func', fill_value=-1)
+    d[d>1] = 1
+    file_name_prefix = input_file.split("_")[0]
+    for col in list(d.columns):
+        d['col'].to_csv("{}_{}.csv".format(file_name_prefix, col))
