@@ -36,7 +36,7 @@ def exportOTUtable(df, taxDict, taxType, outFileName):
 #Input: usearch SINTAX taxonomy file name
 #Output: python dictionary mapping otu header to 
 #        list [taxonomy probabilities, final taxonomy]
-def getSintaxTax(inFileName):
+def importSintax(inFileName):
     taxDict = {}
     inFile = open(inFileName, 'r')
     for line in inFile:
