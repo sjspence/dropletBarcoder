@@ -122,7 +122,7 @@ def process_fastq_and_mapping_file(input_file, output_file, mapping_file, qualit
         summaryFile.write('Total\t' + str(total))
 
 
-def find_significant_connections(connection_file, abundance_file, sig_above_file, sig_below_file):
+def filter_significant_connections(connection_file, abundance_file, sig_above_file, sig_below_file):
     conn = pd.read_csv(connection_file, header=None)
     abu = pd.read_csv(abundance_file, header=None)
     otu_count = abu[1].sum()
@@ -147,3 +147,20 @@ def find_significant_connections(connection_file, abundance_file, sig_above_file
     pw_s_b_out['Color'] = '#000099'
     pw_s_b_out['Label'] = 'Label'
     pw_s_b_out.to_csv(sig_below_file, index=None) 
+
+
+def output_abunds_and_combinations(input_file, output_file):
+    from itertools import combinations, chain
+    import pandas as pd
+    a = pd.read_csv(input_file, sep="\t", header=None)
+    a[1] = a[1].str.split(",")
+    singlets = pd.Series([i[0] for i in list(a[~a[1].isnull()][1]) if len(i) == 1])
+    singlets.value_counts().reset_index().to_csv("$[OUTPUT0]", index=None, header=None)
+    combs = list(pd.Series([list(combinations(i, 2)) for i in list(a[~a[1].isnull()][1]) if len(i) > 1]))
+    connections = pd.DataFrame([sorted(i) for i in list(chain.from_iterable(combs))])
+    connections = connections.groupby(0)[1].value_counts()
+    connections.name = 'Count'
+    connections = connections.reset_index()
+    connections['Color'] = '#ff0000'
+    connections['Label'] = 'Label'
+    connections.to_csv(output_file, header=None, index=None)
