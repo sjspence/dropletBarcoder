@@ -4,8 +4,7 @@ import subprocess
 from collections import defaultdict
 from itertools import combinations, chain
 from scipy.stats import poisson
-import epride as ep
-
+from . import io
 
 def getExtension(fileName):
     fileName = fileName.split('.')
@@ -25,24 +24,24 @@ def clusterWithUsearch(usearchPath, inFile, percIdentity):
                      clustFile], env=env)
 
 
-def move_barcodes_and_type_to_fasta_id(bc_seq, bridge_dict):
-    bridge_dict = {key: ep.expand_primers(ep.reverse_complement(val))
-                   for key, val in bridge_dict.items()}
-    for seq_id, seq in bc_seq:
-        for bridge_id, bridges in bridge_dict.items():
-            for bridge in bridges:
-                if bridge in seq:
-                    bc, rest = seq.split(bridge)
-                    if len(bc) == 20:
-                        seq_id = "{} barcode={} sequence_type={}".format(seq_id.strip(),
-                                                                         bc, bridge_id)
-                        yield([seq_id, rest])
+# def move_barcodes_and_type_to_fasta_id(bc_seq, bridge_dict):
+#     bridge_dict = {key: ep.expand_primers(ep.reverse_complement(val))
+#                    for key, val in bridge_dict.items()}
+#     for seq_id, seq in bc_seq:
+#         for bridge_id, bridges in bridge_dict.items():
+#             for bridge in bridges:
+#                 if bridge in seq:
+#                     bc, rest = seq.split(bridge)
+#                     if len(bc) == 20:
+#                         seq_id = "{} barcode={} sequence_type={}".format(seq_id.strip(),
+#                                                                          bc, bridge_id)
+#                         yield([seq_id, rest])
 
 
 def process_barcode_info(input_seq_file, output_seq_file, bridge_dict):
-    seqs = ep.read_fasta(input_seq_file)
+    seqs = io.read_fasta(input_seq_file)
     fasta_iter = move_barcodes_and_type_to_fasta_id(seqs, bridge_dict)
-    ep.write_fasta(fasta_iter, output_seq_file)
+    io.write_fasta(fasta_iter, output_seq_file)
 
 
 def get_len_distr(seqs):
@@ -67,15 +66,26 @@ def get_seed_dict(uc_file):
     return seed_dict
 
 
-def add_otus_to_fasta(seq_file, uc_file, output_file):
-    seeds = get_seed_dict(uc_file)
+def add_otus_to_fasta(seq_file, output_file, uc_files):
+    seeds = {}
+    for uc in uc_files:
+        seed = get_seed_dict(uc)
+        seeds.update(seed)
     seq_acc = []
-    for seq_id, seq in ep.read_fasta(seq_file):
+    for seq_id, seq in io.read_fasta(seq_file):
         short_id = seq_id[1:].split()[0]
-        seed_id = seeds[short_id]
-        new_seq_id = "{} OTU={}".format(seq_id.strip(), seed_id)
-        seq_acc.append([new_seq_id, seq])
-    ep.write_fasta(seq_acc, output_file)
+        try:
+            seed_id = seeds[short_id]
+            seq_id = "{} OTU={}".format(seq_id.strip(), seed_id)
+        except KeyError:
+            pass
+        seq_acc.append([seq_id, seq])
+    io.write_fasta(seq_acc, output_file)
+
+
+def fasta_to_bc_otu_table(fasta_file):
+    fasta_list = list(io.read_fasta(fasta_file))
+    fasta_table = pd.DataFrame([i.strip().split() for i, _ in fasta_list])
 
 
 def process_mapping_file(mapping_file):
@@ -90,6 +100,7 @@ def process_mapping_file(mapping_file):
                 readCounts[line[1]] = 0
                 sampIDs.append(line[0].replace('_', 's'))
     return [sampIDs, mapping, readCounts]
+
 
 def process_fastq_and_mapping_file(input_file, output_file, mapping_file, quality_summary_file):
     sampIDs, mapping, readCounts = process_mapping_file(mapping_file)
