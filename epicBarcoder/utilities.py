@@ -1,6 +1,9 @@
+import pandas as pd
 import os
 import subprocess
 from collections import defaultdict
+from itertools import combinations
+from scipy.stats import poisson
 import epride as ep
 
 
@@ -117,3 +120,30 @@ def process_fastq_and_mapping_file(input_file, output_file, mapping_file, qualit
                     summaryFile.write(s + '\t' + str(readCounts[bc]) + '\n')
                     total += readCounts[bc]
         summaryFile.write('Total\t' + str(total))
+
+
+def find_significant_connections(connection_file, abundance_file, sig_above_file, sig_below_file):
+    conn = pd.read_csv(connection_file, header=None)
+    abu = pd.read_csv(abundance_file, header=None)
+    otu_count = abu[1].sum()
+    abu[2] = abu[1]/otu_count
+    pairwise = pd.DataFrame(list(combinations(list(abu[0]), 2)))
+    pairwise_abu1 = pd.merge(pairwise, abu, on=0)
+    pairwise_abu2 = pd.merge(pairwise_abu1, abu, left_on='1_x', right_on=0)
+    pairwise_abu = pairwise_abu2.loc[:, ['0_x', '1_x', '2_x', '2_y']]
+    pairwise_abu.columns = ['Left', 'Right', 'Left_perc', 'Right_perc']
+    pairwise_abu['Lambda'] = pairwise_abu['Left_perc'] * pairwise_abu['Right_perc'] * otu_count
+    pairwise_tot = pd.merge(pairwise_abu, conn, left_on=['Left', 'Right'], right_on=[0, 1])
+    pairwise_tot = pairwise_tot.loc[:, ['Left', 'Right', 'Lambda', 2]]
+    pairwise_tot.columns = ['Left', 'Right', 'Lambda', 'Observed']
+    pairwise_tot['p-val'] = poisson.pmf(pairwise_tot['Observed'], pairwise_tot['Lambda'])
+    pairwise_sig_above = pairwise_tot[(pairwise_tot['p-val'] < 0.001) & (pairwise_tot['Observed'] > pairwise_tot['Lambda'])]
+    pw_s_a_out = pairwise_sig_above.loc[:, ['Left', 'Right', 'Observed']]
+    pw_s_a_out['Color'] = '#ff0000'
+    pw_s_a_out['Label'] = 'Label'
+    pw_s_a_out.to_csv(sig_above_file, index=None) 
+    pairwise_sig_below = pairwise_tot[(pairwise_tot['p-val'] < 0.001) & (pairwise_tot['Observed'] < pairwise_tot['Lambda'])]
+    pw_s_b_out = pairwise_sig_below.loc[:, ['Left', 'Right', 'Observed']]
+    pw_s_b_out['Color'] = '#000099'
+    pw_s_b_out['Label'] = 'Label'
+    pw_s_b_out.to_csv(sig_below_file, index=None) 
