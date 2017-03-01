@@ -164,7 +164,7 @@ def output_abunds_and_connections(input_file, abund_output_file, connection_outp
     connections.to_csv(connection_output_file, header=None, index=None)
 
 
-def output_functions(input_file):
+def output_functions(input_file, output_file, gene_name):
     a = pd.read_csv(input_file, sep="\t", header=None)
     b = a[~(a[1].isnull()) & ~(a[3].isnull()) & ~(a[1].str.contains(",", na=False)) & ~(a[3].str.contains(",", na=False))]
     b.columns = ['Barcode', 'OTU', 'Euk_OTU', 'Func']
@@ -173,6 +173,4 @@ def output_functions(input_file):
     c = c.reset_index()
     d = pd.pivot_table(c, values='Count', index='OTU', columns='Func', fill_value=-1)
     d[d>1] = 1
-    file_name_prefix = input_file.split("_")[0]
-    for col in list(d.columns):
-        d['col'].to_csv("{}_{}.csv".format(file_name_prefix, col))
+    d[gene_name].to_csv(output_file, header=None)
