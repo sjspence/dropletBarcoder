@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import subprocess
 from collections import defaultdict
-from itertools import combinations
+from itertools import combinations, chain
 from scipy.stats import poisson
 import epride as ep
 
@@ -150,8 +150,6 @@ def filter_significant_connections(connection_file, abundance_file, sig_above_fi
 
 
 def output_abunds_and_combinations(input_file, output_file):
-    from itertools import combinations, chain
-    import pandas as pd
     a = pd.read_csv(input_file, sep="\t", header=None)
     a[1] = a[1].str.split(",")
     singlets = pd.Series([i[0] for i in list(a[~a[1].isnull()][1]) if len(i) == 1])
