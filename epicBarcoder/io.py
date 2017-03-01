@@ -73,3 +73,28 @@ def importQiimeOTU(textFileName, taxIncluded):
     df = pd.DataFrame(data, index=index, columns=header)
     return df
 
+
+def read_fasta(fasta):
+    """ Read a fasta file and yield pairs of fasta ids and DNA sequences.
+    """
+    with open(fasta) as f:
+        grouped = groupby(f, lambda x: x[0] == ">")
+        for cond, entry in grouped:
+            if cond:
+                fasta_id = next(entry)
+                _, seq_iter = next(grouped)
+                seq = ''.join([line.strip() for line in seq_iter]).upper()
+                yield([fasta_id, seq])
+
+def write_fasta(fasta_iter, output_file, size_limit=100000):
+    """ Write fasta iterables (such as those created by create_fasta_iter) into fasta files.
+    """
+    with open(output_file, "w") as f:
+        for fasta_id, seq in fasta_iter:
+            if fasta_id[0] != ">":
+                fasta_id = ">" + fasta_id
+            if "\n" not in fasta_id:
+                fasta_id += "\n"
+            if len(seq) < size_limit:
+                output = "{}{}\n".format(fasta_id, seq)
+                f.write(output)
