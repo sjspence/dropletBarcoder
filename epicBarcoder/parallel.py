@@ -4,8 +4,7 @@ import random
 import os
 import time
 from collections import defaultdict
-import epride as ep
-
+from . import io
 
 array_dict = {'lsf': '''#!/bin/bash
 #BSUB -n 1
@@ -76,11 +75,11 @@ def make_split_dict(chunk_iter, no_splits):
 
 
 def split_seqs(seq_file, no_splits):
-    seqs = ep.read_fasta(seq_file)
+    seqs = io.read_fasta(seq_file)
     split_dict = make_split_dict(seqs, no_splits)
     for key, val in split_dict.items():
         seq_name = key + "_tmp.fasta"
-        ep.write_fasta(val, seq_name)
+        io.write_fasta(val, seq_name)
     return list(split_dict.keys())
 
 
