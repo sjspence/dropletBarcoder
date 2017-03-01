@@ -149,11 +149,11 @@ def filter_significant_connections(connection_file, abundance_file, sig_above_fi
     pw_s_b_out.to_csv(sig_below_file, index=None) 
 
 
-def output_abunds_and_combinations(input_file, output_file):
+def output_abunds_and_connections(input_file, abund_output_file, connection_output_file):
     a = pd.read_csv(input_file, sep="\t", header=None)
     a[1] = a[1].str.split(",")
     singlets = pd.Series([i[0] for i in list(a[~a[1].isnull()][1]) if len(i) == 1])
-    singlets.value_counts().reset_index().to_csv("$[OUTPUT0]", index=None, header=None)
+    singlets.value_counts().reset_index().to_csv(abund_output_file, index=None, header=None)
     combs = list(pd.Series([list(combinations(i, 2)) for i in list(a[~a[1].isnull()][1]) if len(i) > 1]))
     connections = pd.DataFrame([sorted(i) for i in list(chain.from_iterable(combs))])
     connections = connections.groupby(0)[1].value_counts()
@@ -161,7 +161,7 @@ def output_abunds_and_combinations(input_file, output_file):
     connections = connections.reset_index()
     connections['Color'] = '#ff0000'
     connections['Label'] = 'Label'
-    connections.to_csv(output_file, header=None, index=None)
+    connections.to_csv(connection_output_file, header=None, index=None)
 
 
 def output_functions(input_file):
