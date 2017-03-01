@@ -28,14 +28,14 @@ Installation
 ------------
 
 ```
-git clone https://github.com/sjspence/spenceOTU.git
+git clone https://github.com/sjspence/epicBarcoder.git
 python setup.py install
 ```
 
 Examples
 --------
 ```python
-import spenceOTU
+import epicBarcoder
 
 #TODO
 
