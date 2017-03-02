@@ -1,3 +1,5 @@
+
+from itertools import groupby
 import pandas as pd
 
 def exportFasta(reads, outFileName):
@@ -27,7 +29,7 @@ def exportOTUtable(df, taxDict, taxType, outFileName):
     else:
         outFile.write('\ttaxonomy\n')
     for row in df.iterrows():
-        index, data = row    
+        index, data = row
         outFile.write(index + '\t')
         outFile.write('\t'.join(map(str, data.tolist())) + '\t')
         outFile.write('\t'.join(taxDict[index]) + '\n')
@@ -98,3 +100,27 @@ def write_fasta(fasta_iter, output_file, size_limit=100000):
             if len(seq) < size_limit:
                 output = "{}{}\n".format(fasta_id, seq)
                 f.write(output)
+
+
+def read_fastq(fastq):
+    """
+    Read a fastq file and yield chunks of four lines, corresponding to each entry
+    :param fastq: str; fastq file name
+    :return: list; a list of id, sequence, other id and quality score
+    """
+    with open(fastq) as f:
+        for line in f:
+            id_line = line
+            seq_line = next(f)
+            other_id_line = next(f)
+            quality_score = next(f)
+            yield([id_line, seq_line, other_id_line, quality_score])
+
+
+def write_fastq(fastq_iter, output_file, size_limit=100000):
+    """ Write fastq iterables (such as those created by create_fastq_iter) into fastq files.
+    """
+    with open(output_file, "w") as f:
+        for fastq_id, seq, other_id, quality in fastq_iter:
+            if len(seq) < size_limit:
+                f.write([fastq_id, seq, other_id, quality])

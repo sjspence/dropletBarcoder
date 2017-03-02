@@ -66,7 +66,7 @@ def get_seed_dict(uc_file):
     return seed_dict
 
 
-def add_otus_to_fasta(seq_file, output_file, uc_files):
+def add_otus_to_fasta(seq_file, output_file, uc_files, add_type_to_otu=False):
     seeds = {}
     for uc in uc_files:
         seed = get_seed_dict(uc)
@@ -76,14 +76,18 @@ def add_otus_to_fasta(seq_file, output_file, uc_files):
         short_id = seq_id[1:].split()[0]
         try:
             seed_id = seeds[short_id]
-            seq_id = "{} OTU={}".format(seq_id.strip(), seed_id)
+            type_id = seq_id.strip().split()[-1].split("=")[1]
+            seq_id = "{} OTU={}__{}".format(seq_id.strip(), type_id, seed_id)
         except KeyError:
-            pass
+            if add_type_to_otu:
+                seed_id = "unclassified"
+                type_id = seq_id.strip().split()[-1].split("=")[1]
+                seq_id = "{} OTU={}__{}".format(seq_id.strip(), type_id, seed_id)
         seq_acc.append([seq_id, seq])
     io.write_fasta(seq_acc, output_file)
 
 
-def fasta_to_bc_otu_table(fasta_file):
+def fasta_to_bc_otu_table(fasta_file, output_file=None):
     fasta_list = list(io.read_fasta(fasta_file))
     fasta_table = pd.DataFrame([i.strip().split() for i, _ in fasta_list])
     fasta_table['Sample'] = fasta_table[0].str.split("_").apply(lambda x: x[0][1:])
@@ -91,8 +95,42 @@ def fasta_to_bc_otu_table(fasta_file):
     fasta_table['Type'] = fasta_table[6].str.split("=").apply(lambda x: x[1])
     fasta_table[7][fasta_table[7].isnull()] = "OTU=None"
     fasta_table['OTU'] = fasta_table[7].str.split("=").apply(lambda x: x[1])
-    fasta_table = fasta_table.loc[:,[0, 'Sample', 'Barcode', 'Type', 'OTU']].rename(columns={0: 'Read'})
+    fasta_table = fasta_table.loc[:, [0, 'Sample', 'Barcode',
+                                      'Type', 'OTU']].rename(columns={0: 'Read'})
+    if output_file:
+        fasta_table.to_csv(output_file, index=None, header=None)
     return fasta_table
+
+
+def get_grouped_table(fasta_table):
+    grouped_table = fasta_table.groupby(['Sample', 'Barcode'])['OTU'].apply(set)
+    filtered_table = grouped_table.apply(lambda x: [i for i in list(x) if (i != "16S__unclassified")
+                                                    and (i != "18S__unclassified")])
+    filtered_table = filtered_table[filtered_table.apply(lambda x: len(x) > 0)]
+    return filtered_table
+
+
+def get_bacterial_singletons_and_connections(grouped_table):
+    bacterial_otus = grouped_table.apply(lambda x: [i for i in x if "16S__" in i])
+    bacterial_otus = bacterial_otus[bacterial_otus.apply(lambda x: len(x) > 0)]
+    singletons = bacterial_otus[bacterial_otus.apply(lambda x: len([i for i in x if "16S__" in i]) == 1)]\
+                 .apply(lambda x: x[0])
+    singletons = singletons.groupby(level='Sample').value_counts()
+    singletons.name = 'Count'
+    singletons = singletons.reset_index()
+    singletons['OTU'] = singletons['OTU'].str.split("__").apply(lambda x: x[1])
+    multiples = bacterial_otus[bacterial_otus.apply(lambda x: len([i for i in x if "16S__" in i]) > 1)]
+    acc = []
+    for entry_id, entry in multiples.groupby(level='Sample'):
+        tmp = [combinations(i, 2) for i in list(entry)]
+        tmp = [sorted(i) for i in chain.from_iterable(tmp)]
+        tmp = pd.DataFrame(tmp)
+        tmp['Sample'] = entry_id
+        tmp = tmp.set_index('Sample')
+        acc.append(tmp)
+    multiples = pd.concat(acc)
+    return [singletons, multiples]
+
 
 def process_mapping_file(mapping_file):
     sampIDs = []
