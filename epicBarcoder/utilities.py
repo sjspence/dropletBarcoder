@@ -86,7 +86,13 @@ def add_otus_to_fasta(seq_file, output_file, uc_files):
 def fasta_to_bc_otu_table(fasta_file):
     fasta_list = list(io.read_fasta(fasta_file))
     fasta_table = pd.DataFrame([i.strip().split() for i, _ in fasta_list])
-
+    fasta_table['Sample'] = fasta_table[0].str.split("_").apply(lambda x: x[0][1:])
+    fasta_table['Barcode'] = fasta_table[5].str.split("=").apply(lambda x: x[1])
+    fasta_table['Type'] = fasta_table[6].str.split("=").apply(lambda x: x[1])
+    fasta_table[7][fasta_table[7].isnull()] = "OTU=None"
+    fasta_table['OTU'] = fasta_table[7].str.split("=").apply(lambda x: x[1])
+    fasta_table = fasta_table.loc[:,[0, 'Sample', 'Barcode', 'Type', 'OTU']].rename(columns={0: 'Read'})
+    return fasta_table
 
 def process_mapping_file(mapping_file):
     sampIDs = []
