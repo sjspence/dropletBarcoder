@@ -129,6 +129,7 @@ def get_bacterial_singletons_and_connections(grouped_table):
         tmp = tmp.set_index('Sample')
         acc.append(tmp)
     multiples = pd.concat(acc)
+    multiples = multiples.applymap(lambda x: x.split("__")[1])
     return [singletons, multiples]
 
 
