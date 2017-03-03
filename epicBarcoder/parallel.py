@@ -75,12 +75,21 @@ def make_split_dict(chunk_iter, no_splits):
     return split_dict
 
 
-def split_seqs(seq_file, no_splits):
-    seqs = ep.read_fasta(seq_file)
+def split_fasta(seq_file, no_splits):
+    seqs = io.read_fasta(seq_file)
     split_dict = make_split_dict(seqs, no_splits)
     for key, val in split_dict.items():
         seq_name = key + "_tmp.fasta"
-        ep.write_fasta(val, seq_name)
+        io.write_fasta(val, seq_name)
+    return list(split_dict.keys())
+
+
+def split_fastq(seq_file, no_splits):
+    seqs = io.read_fastq(seq_file)
+    split_dict = make_split_dict(seqs, no_splits)
+    for key, val in split_dict.items():
+        seq_name = key + "_tmp.fasta"
+        io.write_fasta(val, seq_name)
     return list(split_dict.keys())
 
 
@@ -91,7 +100,7 @@ def run_batch_job(batch_command, scheduler='slurm', memory=2048, run_time='02:00
     if isinstance(batch_command, str):
         job_name = generate_id()
         batch_info = {'mem': memory, 'job': job_name, 'time': run_time,
-                    'home_dir': home_dir, 'command': batch_command}
+                      'home_dir': home_dir, 'command': batch_command}
         batch = batch_dict[scheduler].format(c=batch_info)
         batch_file_name = generate_id() + "_tmp.sh"
         with open(batch_file_name, "w") as f:
@@ -127,11 +136,17 @@ def run_batch_job(batch_command, scheduler='slurm', memory=2048, run_time='02:00
     print("Done!")
 
 
-def run_array_job(seqs, batch_command, post_command=None, no_splits=1000, scheduler='slurm', memory=2048, run_time='02:00:00', cleanup=True):
+def run_array_job(seqs, batch_command, seq_type='fasta', post_command=None, no_splits=1000, scheduler='slurm', memory=2048, run_time='02:00:00', cleanup=True):
     job_name = generate_id()
     user = subprocess.check_output('whoami', universal_newlines=True).strip()
     namelist = job_name + "_tmp.namelist"
-    seq_ids = split_seqs(seqs, no_splits)
+    if seq_type == 'fasta':
+        seq_ids = split_fasta(seqs, no_splits)
+    elif seq_type == 'fastq':
+        seq_ids = split_fastq(seqs, no_splits)
+    else:
+        print("Please provide a fasta or fastq file!")
+        return None
     job_no = len(seq_ids)
     home_dir = os.getcwd()
     batch_info = {'mem': memory, 'job': job_name, 'job_no': job_no, 'time': run_time,

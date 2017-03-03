@@ -110,7 +110,7 @@ def get_grouped_table(fasta_table):
     return filtered_table
 
 
-def get_bacterial_singletons_and_connections(grouped_table):
+def get_singletons_and_connections(grouped_table):
     bacterial_otus = grouped_table.apply(lambda x: [i for i in x if "16S__" in i])
     bacterial_otus = bacterial_otus[bacterial_otus.apply(lambda x: len(x) > 0)]
     singletons = bacterial_otus[bacterial_otus.apply(lambda x: len([i for i in x if "16S__" in i]) == 1)]\
@@ -133,7 +133,6 @@ def get_bacterial_singletons_and_connections(grouped_table):
         tmp = tmp.set_index('Sample')
         acc.append(tmp)
     multiples = pd.concat(acc)
-    # multiples = multiples.applymap(lambda x: x.split("__")[1])
     return [singletons, multiples]
 
 
