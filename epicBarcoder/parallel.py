@@ -89,7 +89,7 @@ def split_fastq(seq_file, no_splits):
     split_dict = make_split_dict(seqs, no_splits)
     for key, val in split_dict.items():
         seq_name = key + "_tmp.fasta"
-        io.write_fasta(val, seq_name)
+        io.write_fastq(val, seq_name)
     return list(split_dict.keys())
 
 
