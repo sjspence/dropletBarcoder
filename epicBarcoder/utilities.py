@@ -101,11 +101,12 @@ def fasta_to_bc_otu_table(fasta_file, output_file=None):
     fasta_table = fasta_table.loc[:, [0, 'Sample', 'Barcode',
                                       'Type', 'OTU']].rename(columns={0: 'Read'})
     if output_file:
-        fasta_table.to_csv(output_file, index=None, header=None)
+        fasta_table.to_csv(output_file, index=None)
     return fasta_table
 
 
 def get_grouped_table(fasta_table):
+    fasta_table = ep.read_csv(fasta_table)
     grouped_table = fasta_table.groupby(['Sample', 'Barcode'])['OTU'].apply(set)
     filtered_table = grouped_table.apply(lambda x: [i for i in list(x) if (i != "16S__unclassified")
                                                     and (i != "18S__unclassified")])
