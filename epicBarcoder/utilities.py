@@ -244,8 +244,12 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
 
 
 def filter_significant_connections(connection_file, abundance_file, sig_above_file, sig_below_file):
-    conn = pd.read_csv(connection_file, header=None)
-    abu = pd.read_csv(abundance_file, header=None)
+    conn = pd.read_csv(connection_file)
+    conn = conn.iloc[:, 1:]
+    conn.columns = [0, 1]
+    abu = pd.read_csv(abundance_file)
+    abu = abu.iloc[:, 1:]
+    abu.columns = [0, 1]
     otu_count = abu[1].sum()
     abu[2] = abu[1]/otu_count
     pairwise = pd.DataFrame(list(combinations(list(abu[0]), 2)))
