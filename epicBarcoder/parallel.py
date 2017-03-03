@@ -4,7 +4,7 @@ import random
 import os
 import time
 from collections import defaultdict
-import epride as ep
+from . import io
 
 
 array_dict = {'lsf': '''#!/bin/bash
