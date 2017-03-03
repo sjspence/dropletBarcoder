@@ -123,4 +123,9 @@ def write_fastq(fastq_iter, output_file, size_limit=100000):
     with open(output_file, "w") as f:
         for fastq_id, seq, other_id, quality in fastq_iter:
             if len(seq) < size_limit:
-                f.write([fastq_id, seq, other_id, quality])
+                fastq_id = fastq_id.strip()
+                seq = seq.strip()
+                other_id = other_id.strip()
+                quality = quality.strip()
+                out_str = "{}\n{}\n{}\n{}\n".format(fastq_id, seq, other_id, quality)
+                f.write(out_str)
