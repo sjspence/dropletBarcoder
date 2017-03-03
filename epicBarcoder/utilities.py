@@ -125,11 +125,15 @@ def get_bacterial_singletons_and_connections(grouped_table):
         tmp = [combinations(i, 2) for i in list(entry)]
         tmp = [sorted(i) for i in chain.from_iterable(tmp)]
         tmp = pd.DataFrame(tmp)
+        tmp = tmp.applymap(lambda x: x.split("__")[1])
+        tmp = tmp.groupby(0)[1].value_counts()
+        tmp.name = 'Count'
+        tmp = tmp.reset_index()
         tmp['Sample'] = entry_id
         tmp = tmp.set_index('Sample')
         acc.append(tmp)
     multiples = pd.concat(acc)
-    multiples = multiples.applymap(lambda x: x.split("__")[1])
+    # multiples = multiples.applymap(lambda x: x.split("__")[1])
     return [singletons, multiples]
 
 
