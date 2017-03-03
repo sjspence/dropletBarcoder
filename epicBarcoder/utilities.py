@@ -151,13 +151,13 @@ def write_connections_and_abundances(conn_abund_list, file_name_prefix = None):
         sample_name = sample + "_abunds.csv"
         if file_name_prefix:
             sample_name = file_name_prefix + sample_name
-        obs.to_csv(sample_name)
+        obs.to_csv(sample_name, index=None)
 
     for sample, obs in connections.groupby('Sample'):
         sample_name = sample + "_connections.csv"
         if file_name_prefix:
             sample_name = file_name_prefix + sample_name
-        obs.to_csv(sample_name)
+        obs.to_csv(sample_name, index=None)
 
 
 def process_mapping_file(mapping_file):
