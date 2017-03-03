@@ -210,16 +210,16 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
     uniqueDict = dereplicate.getUniqueSeqs(noPrimerReads, '05_unique_seqs.fasta')
     subprocess.call([usearchPath, '-unoise2', '05_unique_seqs.fasta', '-fastaout', '06_denoised.fa',
                     '-otudbout', '06_db.fa', '-minampsize', '1'], env=env)
-    outFile = open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.fasta', 'w')
+    outFile = open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9_sintax.fasta', 'w')
     taxDict = {}
-    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.qiime.taxonomy', 'r') as t:
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.qiime.taxonomy', 'r') as t:
         for line in t:
             line = line.strip().split('\t')
             taxID = line[0]
             tax = line[1].strip().replace('__',':')
             tax = tax.replace(';',',')
             taxDict[taxID] = tax
-    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9.fasta', 'r') as f:
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9.fasta', 'r') as f:
         for line in f:
             if '>' in line:
                 line = line.strip().split(' ')
@@ -232,10 +232,10 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
             else:
                 outFile.write(line)
     outFile.close()
-    subprocess.call([usearchPath, '-makeudb_sintax', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.fasta',
-                    '-output', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.udb'], env=env)
+    subprocess.call([usearchPath, '-makeudb_sintax', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9_sintax.fasta',
+                    '-output', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9_sintax.udb'], env=env)
     subprocess.call([usearchPath, '-sintax', '06_denoised.fa',
-                    '-db', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.udb',
+                    '-db', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9_sintax.udb',
                     '-tabbedout', '07_denoised.sintax',
                     '-strand', 'plus', '-sintax_cutoff', '0.8', '-threads', '4'], env=env)
     denoised = reads.importFasta('06_denoised.fa')
