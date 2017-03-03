@@ -70,7 +70,7 @@ def get_seed_dict(uc_file):
     return seed_dict
 
 
-def add_otus_to_fasta(seq_file, output_file, uc_files, add_type_to_otu=False):
+def add_otus_to_fasta(seq_file, output_file, uc_files):
     seeds = {}
     for uc in uc_files:
         seed = get_seed_dict(uc)
@@ -83,10 +83,9 @@ def add_otus_to_fasta(seq_file, output_file, uc_files, add_type_to_otu=False):
             type_id = seq_id.strip().split()[-1].split("=")[1]
             seq_id = "{} OTU={}__{}".format(seq_id.strip(), type_id, seed_id)
         except KeyError:
-            if add_type_to_otu:
-                seed_id = "unclassified"
-                type_id = seq_id.strip().split()[-1].split("=")[1]
-                seq_id = "{} OTU={}__{}".format(seq_id.strip(), type_id, seed_id)
+            seed_id = "unclassified"
+            type_id = seq_id.strip().split()[-1].split("=")[1]
+            seq_id = "{} OTU={}__{}".format(seq_id.strip(), type_id, seed_id)
         seq_acc.append([seq_id, seq])
     io.write_fasta(seq_acc, output_file)
 
