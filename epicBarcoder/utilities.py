@@ -5,6 +5,9 @@ from collections import defaultdict
 from itertools import combinations, chain
 from scipy.stats import poisson
 from . import io
+from . import dereplicate
+
+env = os.environ
 
 def getExtension(fileName):
     fileName = fileName.split('.')
@@ -179,6 +182,44 @@ def process_fastq_and_mapping_file(input_file, output_file, mapping_file, qualit
                     summaryFile.write(s + '\t' + str(readCounts[bc]) + '\n')
                     total += readCounts[bc]
         summaryFile.write('Total\t' + str(total))
+
+
+def make_otus_and_assign(input_file, db_dir, usearchPath):
+    noPrimerReads = io.read_fasta('04_pear_noPrimers.fasta')
+    uniqueDict = dereplicate.getUniqueSeqs(noPrimerReads, '05_unique_seqs.fasta')
+    subprocess.call([usearchPath, '-unoise2', '05_unique_seqs.fasta', '-fastaout', '06_denoised.fa',
+                    '-otudbout', '06_db.fa', '-minampsize', '1'], env=env)
+    outFile = open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.fasta', 'w')
+    taxDict = {}
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.qiime_spike.taxonomy', 'r') as t:
+        for line in t:
+            line = line.strip().split('\t')
+            taxID = line[0]
+            tax = line[1].strip().replace('__',':')
+            tax = tax.replace(';',',')
+            taxDict[taxID] = tax
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_spike.fasta', 'r') as f:
+        for line in f:
+            if '>' in line:
+                line = line.strip().split(' ')
+                taxInfo = taxDict[line[0].replace('>','')]
+                outLine = line[0] + ';tax=' + taxInfo + ';'
+                for i in line:
+                    if 'HOT' in i:
+                        outLine += i + ';'
+                outFile.write(outLine + '\n')
+            else:
+                outFile.write(line)
+    outFile.close()
+    subprocess.call([usearchPath, '-makeudb_sintax', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.fasta',
+                    '-output', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.udb'], env=env)
+    subprocess.call([usearchPath, '-sintax', '06_denoised.fa',
+                    '-db', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.udb',
+                    '-tabbedout', '07_denoised.sintax',
+                    '-strand', 'plus', '-sintax_cutoff', '0.8', '-threads', '4'], env=env)
+    denoised = io.read_fasta('06_denoised.fa')
+    taxDict = io.importSintax('07_denoised.sintax')
+    dereplicate.otuToHeaders(denoised, taxDict, uniqueDict, '08_all_seqs_tax.fa')
 
 
 def filter_significant_connections(connection_file, abundance_file, sig_above_file, sig_below_file):
