@@ -185,7 +185,7 @@ def process_fastq_and_mapping_file(input_file, output_file, mapping_file, qualit
 
 
 def make_otus_and_assign(input_file, db_dir, usearchPath):
-    noPrimerReads = io.read_fasta('04_pear_noPrimers.fasta')
+    noPrimerReads = io.read_fasta(input_file)
     uniqueDict = dereplicate.getUniqueSeqs(noPrimerReads, '05_unique_seqs.fasta')
     subprocess.call([usearchPath, '-unoise2', '05_unique_seqs.fasta', '-fastaout', '06_denoised.fa',
                     '-otudbout', '06_db.fa', '-minampsize', '1'], env=env)
