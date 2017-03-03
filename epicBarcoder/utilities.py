@@ -306,7 +306,7 @@ def process_unoise_fasta(input_file, output_file):
     acc = []
     for seq_id, seq in fst:
         seq_id_split = seq_id.split()
-        bc_field = seq_id_split[:-1]
+        bc_field = seq_id_split[-1]
         bc, otu = bc_field.split(";")[:2]
         bc = "barcode=" + bc.split("=")[1]
         new_seq_id = " ".join(seq_id_split[:-1]) + " " + bc + " sequence_type=16S " + "OTU=" + otuo
