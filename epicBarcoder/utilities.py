@@ -106,7 +106,8 @@ def fasta_to_bc_otu_table(fasta_file, output_file=None):
 
 
 def get_grouped_table(fasta_table):
-    fasta_table = pd.read_csv(fasta_table)
+    if isinstance(fasta_table, str):
+        fasta_table = pd.read_csv(fasta_table)
     grouped_table = fasta_table.groupby(['Sample', 'Barcode'])['OTU'].apply(set)
     filtered_table = grouped_table.apply(lambda x: [i for i in list(x) if (i != "16S__unclassified")
                                                     and (i != "18S__unclassified")])
@@ -117,12 +118,14 @@ def get_grouped_table(fasta_table):
 def get_singletons_and_connections(grouped_table):
     bacterial_otus = grouped_table.apply(lambda x: [i for i in x if "16S__" in i])
     bacterial_otus = bacterial_otus[bacterial_otus.apply(lambda x: len(x) > 0)]
+
     singletons = bacterial_otus[bacterial_otus.apply(lambda x: len([i for i in x if "16S__" in i]) == 1)]\
                  .apply(lambda x: x[0])
     singletons = singletons.groupby(level='Sample').value_counts()
     singletons.name = 'Count'
     singletons = singletons.reset_index()
     singletons['OTU'] = singletons['OTU'].str.split("__").apply(lambda x: x[1])
+
     multiples = bacterial_otus[bacterial_otus.apply(lambda x: len([i for i in x if "16S__" in i]) > 1)]
     acc = []
     for entry_id, entry in multiples.groupby(level='Sample'):
@@ -137,7 +140,24 @@ def get_singletons_and_connections(grouped_table):
         tmp = tmp.set_index('Sample')
         acc.append(tmp)
     multiples = pd.concat(acc)
+    multiples = multiples.reset_index()
+
     return [singletons, multiples]
+
+
+def write_connections_and_abundances(conn_abund_list, file_name_prefix = None):
+    abundances, connections = conn_abund_list
+    for sample, obs in abundances.groupby('Sample'):
+        sample_name = sample + "_abunds.csv"
+        if file_name_prefix:
+            sample_name = file_name_prefix + sample_name
+        obs.to_csv(sample_name)
+
+    for sample, obs in connections.groupby('Sample'):
+        sample_name = sample + "_connections.csv"
+        if file_name_prefix:
+            sample_name = file_name_prefix + sample_name
+        obs.to_csv(sample_name)
 
 
 def process_mapping_file(mapping_file):
@@ -190,16 +210,16 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
     uniqueDict = dereplicate.getUniqueSeqs(noPrimerReads, '05_unique_seqs.fasta')
     subprocess.call([usearchPath, '-unoise2', '05_unique_seqs.fasta', '-fastaout', '06_denoised.fa',
                     '-otudbout', '06_db.fa', '-minampsize', '1'], env=env)
-    outFile = open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.fasta', 'w')
+    outFile = open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.fasta', 'w')
     taxDict = {}
-    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.qiime_spike.taxonomy', 'r') as t:
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.qiime.taxonomy', 'r') as t:
         for line in t:
             line = line.strip().split('\t')
             taxID = line[0]
             tax = line[1].strip().replace('__',':')
             tax = tax.replace(';',',')
             taxDict[taxID] = tax
-    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_spike.fasta', 'r') as f:
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9.fasta', 'r') as f:
         for line in f:
             if '>' in line:
                 line = line.strip().split(' ')
@@ -212,10 +232,10 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
             else:
                 outFile.write(line)
     outFile.close()
-    subprocess.call([usearchPath, '-makeudb_sintax', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.fasta',
-                    '-output', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.udb'], env=env)
+    subprocess.call([usearchPath, '-makeudb_sintax', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.fasta',
+                    '-output', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.udb'], env=env)
     subprocess.call([usearchPath, '-sintax', '06_denoised.fa',
-                    '-db', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.udb',
+                    '-db', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax.udb',
                     '-tabbedout', '07_denoised.sintax',
                     '-strand', 'plus', '-sintax_cutoff', '0.8', '-threads', '4'], env=env)
     denoised = reads.importFasta('06_denoised.fa')
