@@ -299,3 +299,16 @@ def output_functions(input_file, output_file, gene_name):
     d = pd.pivot_table(c, values='Count', index='OTU', columns='Func', fill_value=-1)
     d[d>1] = 1
     d[gene_name].to_csv(output_file, header=None)
+
+
+def process_unoise_fasta(input_file, output_file):
+    fst = io.read_fasta(input_file)
+    acc = []
+    for seq_id, seq in fst:
+        seq_id_split = seq_id.split()
+        bc_field = seq_id_split[:-1]
+        bc, otu = bc_field.split(";")[:2]
+        bc = "barcode=" + bc.split("=")[1]
+        new_seq_id = " ".join(seq_id_split[:-1]) + " " + bc + " sequence_type=16S " + "OTU=" + otuo
+        acc.append([new_seq_id, seq])
+    io.write_fasta(acc)
