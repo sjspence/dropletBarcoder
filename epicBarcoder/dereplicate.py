@@ -42,7 +42,7 @@ def uniqueSeqsToOTU(uparseMap):
 def otuToHeaders(otuReads, taxInfo, unique, outFileName):
     outFile = open(outFileName, 'w')
     for otu in otuReads:
-        for read in unique[otu[0]]:
+        for read in unique[otu.seq]:
             otuID = otu.header.replace('>','').split(';')[0]
             finalTax = taxInfo[otu.header.replace('>','')][1]
             newHeader = read.header + ';' + otuID + ';tax=' + finalTax + ';'

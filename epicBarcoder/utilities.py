@@ -6,6 +6,7 @@ from itertools import combinations, chain
 from scipy.stats import poisson
 from . import io
 from . import dereplicate
+from . import reads
 
 env = os.environ
 
@@ -185,7 +186,7 @@ def process_fastq_and_mapping_file(input_file, output_file, mapping_file, qualit
 
 
 def make_otus_and_assign(input_file, db_dir, usearchPath):
-    noPrimerReads = io.read_fasta(input_file)
+    noPrimerReads = reads.importFasta(input_file)
     uniqueDict = dereplicate.getUniqueSeqs(noPrimerReads, '05_unique_seqs.fasta')
     subprocess.call([usearchPath, '-unoise2', '05_unique_seqs.fasta', '-fastaout', '06_denoised.fa',
                     '-otudbout', '06_db.fa', '-minampsize', '1'], env=env)
@@ -217,7 +218,7 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
                     '-db', db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_sintax_spike.udb',
                     '-tabbedout', '07_denoised.sintax',
                     '-strand', 'plus', '-sintax_cutoff', '0.8', '-threads', '4'], env=env)
-    denoised = io.read_fasta('06_denoised.fa')
+    denoised = reads.importFasta('06_denoised.fa')
     taxDict = io.importSintax('07_denoised.sintax')
     dereplicate.otuToHeaders(denoised, taxDict, uniqueDict, '08_all_seqs_tax.fa')
 
