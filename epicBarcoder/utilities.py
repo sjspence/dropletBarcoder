@@ -248,7 +248,6 @@ def filter_significant_connections(connection_file, abundance_file, sig_above_fi
     conn = conn.iloc[:, 1:]
     conn.columns = [0, 1, 2]
     abu = pd.read_csv(abundance_file)
-    abu = abu.iloc[:, 1:]
     abu.columns = [0, 1]
     otu_count = abu[1].sum()
     abu[2] = abu[1]/otu_count
