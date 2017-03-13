@@ -212,14 +212,14 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
                     '-otudbout', '06_db.fa', '-minampsize', '1'], env=env)
     outFile = open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9_sintax.fasta', 'w')
     taxDict = {}
-    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.qiime.taxonomy', 'r') as t:
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.qiime_spike.taxonomy', 'r') as t:
         for line in t:
             line = line.strip().split('\t')
             taxID = line[0]
             tax = line[1].strip().replace('__',':')
             tax = tax.replace(';',',')
             taxDict[taxID] = tax
-    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9.fasta', 'r') as f:
+    with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.p9_spike.fasta', 'r') as f:
         for line in f:
             if '>' in line:
                 line = line.strip().split(' ')
