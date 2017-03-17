@@ -1,14 +1,23 @@
-import pandas as pd
 import os
 import subprocess
+import random
+import string
 from collections import defaultdict
 from itertools import combinations, chain
 from scipy.stats import poisson
+import pandas as pd
 from . import io
 from . import dereplicate
 from . import reads
 
 env = os.environ
+
+def generate_id(size=6):
+    """ Generate random sequences of characters for temporary file names.
+    """
+    chars = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(chars) for _ in range(size))
+
 
 def getExtension(fileName):
     fileName = fileName.split('.')
@@ -17,7 +26,6 @@ def getExtension(fileName):
 
 
 def clusterWithUsearch(usearchPath, inFile, percIdentity):
-    env = os.environ
     percIdentity = str(percIdentity)
     extension = getExtension(inFile)
     outFile = inFile.replace(extension, '_' + percIdentity + '.fa')
@@ -42,10 +50,10 @@ def clusterWithUsearch(usearchPath, inFile, percIdentity):
 #                         yield([seq_id, rest])
 
 
-def process_barcode_info(input_seq_file, output_seq_file, bridge_dict):
-    seqs = io.read_fasta(input_seq_file)
-    fasta_iter = move_barcodes_and_type_to_fasta_id(seqs, bridge_dict)
-    io.write_fasta(fasta_iter, output_seq_file)
+# def process_barcode_info(input_seq_file, output_seq_file, bridge_dict):
+#     seqs = io.read_fasta(input_seq_file)
+#     fasta_iter = move_barcodes_and_type_to_fasta_id(seqs, bridge_dict)
+#     io.write_fasta(fasta_iter, output_seq_file)
 
 
 def get_len_distr(seqs):
@@ -108,41 +116,52 @@ def fasta_to_bc_otu_table(fasta_file, output_file=None):
 def get_grouped_table(fasta_table):
     if isinstance(fasta_table, str):
         fasta_table = pd.read_csv(fasta_table)
-    grouped_table = fasta_table.groupby(['Sample', 'Barcode'])['OTU'].apply(set)
-    filtered_table = grouped_table.apply(lambda x: [i for i in list(x) if (i != "16S__unclassified")
-                                                    and (i != "18S__unclassified")])
-    filtered_table = filtered_table[filtered_table.apply(lambda x: len(x) > 0)]
-    return filtered_table
+    grouped_table = fasta_table.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
+    return grouped_table
 
 
-def get_singletons_and_connections(grouped_table):
-    bacterial_otus = grouped_table.apply(lambda x: [i for i in x if "16S__" in i])
-    bacterial_otus = bacterial_otus[bacterial_otus.apply(lambda x: len(x) > 0)]
+def get_singletons(grouped_table):
+    singletons = grouped_table[grouped_table.apply(lambda x: len(x) == 1)]
+    return singletons
 
-    singletons = bacterial_otus[bacterial_otus.apply(lambda x: len([i for i in x if "16S__" in i]) == 1)]\
-                 .apply(lambda x: x[0])
-    singletons = singletons.groupby(level='Sample').value_counts()
-    singletons.name = 'Count'
-    singletons = singletons.reset_index()
-    singletons['OTU'] = singletons['OTU'].str.split("__").apply(lambda x: x[1])
 
-    multiples = bacterial_otus[bacterial_otus.apply(lambda x: len([i for i in x if "16S__" in i]) > 1)]
+def get_connections(grouped_table):
+    connections = grouped_table[grouped_table.apply(lambda x: len(set(x)) > 1)]
+    connections = connections.reset_index()
+    connections['OTU'] = connections['OTU'].apply(lambda x: sorted(list(set(x))))
+    return connections
+
+
+def expand_connections(connections):
     acc = []
-    for entry_id, entry in multiples.groupby(level='Sample'):
-        tmp = [combinations(i, 2) for i in list(entry)]
-        tmp = [sorted(i) for i in chain.from_iterable(tmp)]
-        tmp = pd.DataFrame(tmp)
-        tmp = tmp.applymap(lambda x: x.split("__")[1])
-        tmp = tmp.groupby(0)[1].value_counts()
-        tmp.name = 'Count'
-        tmp = tmp.reset_index()
-        tmp['Sample'] = entry_id
-        tmp = tmp.set_index('Sample')
-        acc.append(tmp)
-    multiples = pd.concat(acc)
-    multiples = multiples.reset_index()
+    connections['OTU'] = connections['OTU'].apply(lambda x: combinations(x, 2))
+    for row in connections.iterrows():
+        sample = row[1]['Sample']
+        bc = row[1]['Barcode']
+        otu_type = row[1]['Type']
+        new_frame = pd.DataFrame([sorted(j) for j in row[1]['OTU']])
+        new_frame['Sample'] = sample
+        new_frame['Barcode'] = bc
+        new_frame['Type'] = otu_type
+        acc.append(new_frame)
+    expanded = pd.concat(acc)
+    expanded = expanded.rename(columns={0: 'Left', 1: 'Right'})
+    expanded = expanded.loc[:, ['Sample', 'Barcode', 'Type', 'Left', 'Right']]
+    expanded.index = range(len(expanded.index))
+    return expanded
 
-    return [singletons, multiples]
+
+class BarcodeContainer(object):
+
+    def __init__(self, input_fasta, unoise=False):
+        ''' Input after preparing the fasta ids using function add_otus_to_fasta
+'''
+        if unoise:
+            self.table = process_unoise_fasta("processed.fasta")
+        else:
+            self.table = fasta_to_bc_otu_table(input_fasta)
+        
+    pass
 
 
 def write_connections_and_abundances(conn_abund_list, file_name_prefix = None):
@@ -300,7 +319,7 @@ def output_functions(input_file, output_file, gene_name):
     d[gene_name].to_csv(output_file, header=None)
 
 
-def process_unoise_fasta(input_file, output_file):
+def process_unoise_fasta(input_file):
     fst = io.read_fasta(input_file)
     acc = []
     for seq_id, seq in fst:
@@ -310,4 +329,5 @@ def process_unoise_fasta(input_file, output_file):
         bc = "barcode=" + bc.split("=")[1]
         new_seq_id = " ".join(seq_id_split[:-1]) + " " + bc + " sequence_type=16S " + "OTU=" + otu
         acc.append([new_seq_id, seq])
-    io.write_fasta(acc, output_file)
+    return acc
+    # io.write_fasta(acc, output_file)

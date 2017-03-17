@@ -1,0 +1,4 @@
+#SampleID	BarcodeSequence	Description
+Sample1	ACTTATTG	Smp1
+Sample2	AATGTCAA	Smp2
+Sample3	AGTATGCA	Smp3
