@@ -36,26 +36,6 @@ def clusterWithUsearch(usearchPath, inFile, percIdentity):
                      clustFile], env=env)
 
 
-# def move_barcodes_and_type_to_fasta_id(bc_seq, bridge_dict):
-#     bridge_dict = {key: ep.expand_primers(ep.reverse_complement(val))
-#                    for key, val in bridge_dict.items()}
-#     for seq_id, seq in bc_seq:
-#         for bridge_id, bridges in bridge_dict.items():
-#             for bridge in bridges:
-#                 if bridge in seq:
-#                     bc, rest = seq.split(bridge)
-#                     if len(bc) == 20:
-#                         seq_id = "{} barcode={} sequence_type={}".format(seq_id.strip(),
-#                                                                          bc, bridge_id)
-#                         yield([seq_id, rest])
-
-
-# def process_barcode_info(input_seq_file, output_seq_file, bridge_dict):
-#     seqs = io.read_fasta(input_seq_file)
-#     fasta_iter = move_barcodes_and_type_to_fasta_id(seqs, bridge_dict)
-#     io.write_fasta(fasta_iter, output_seq_file)
-
-
 def get_len_distr(seqs):
     len_distr_dict = defaultdict(list)
     for seq_id, seq in seqs:
@@ -151,17 +131,47 @@ def expand_connections(connections):
     return expanded
 
 
+def unoise_helper(input_fasta, seq_type):
+    tmp_file_name = generate_id(size=8) + ".fasta"
+    processed = process_unoise_fasta(input_fasta, seq_type)
+    io.write_fasta(processed, tmp_file_name)
+    table = fasta_to_bc_otu_table(tmp_file_name)
+    os.remove(tmp_file_name)
+    return table
+
+
+def grouper(input_fasta, unoise, seq_type=None):
+    if unoise:
+        table = get_grouped_table(unoise_helper(input_fasta, seq_type))
+    else:
+        table = get_grouped_table(fasta_to_bc_otu_table(input_fasta))
+    return table
+
+
 class BarcodeContainer(object):
 
-    def __init__(self, input_fasta, unoise=False):
+    def __init__(self, input_16S=None, input_18S=None, input_funcs=None, unoise=False):
         ''' Input after preparing the fasta ids using function add_otus_to_fasta
 '''
-        if unoise:
-            self.table = process_unoise_fasta("processed.fasta")
-        else:
-            self.table = fasta_to_bc_otu_table(input_fasta)
+        self.type_dict = {}
+        if input_16S:
+            self.type_dict['16S'] = grouper(input_16S, unoise, '16S')
+        if input_18S:
+            self.type_dict['18S'] = grouper(input_18S, unoise, '18S')
+        if input_funcs:
+            self.type_dict['Funcs'] = grouper(input_funcs, unoise, 'Func')
+
+    def get_singletons(self, seq_type):
+        table = self.type_dict[seq_type]
+        singletons = get_singletons(table)
+        return singletons
+
+    def get_connections(self, seq_type):
+        table = self.type_dict[seq_type]
+        connections = get_connections(table)
+        expanded = expand_connections(connections)
+        return expanded
         
-    pass
 
 
 def write_connections_and_abundances(conn_abund_list, file_name_prefix = None):
@@ -319,7 +329,7 @@ def output_functions(input_file, output_file, gene_name):
     d[gene_name].to_csv(output_file, header=None)
 
 
-def process_unoise_fasta(input_file):
+def process_unoise_fasta(input_file, seq_type):
     fst = io.read_fasta(input_file)
     acc = []
     for seq_id, seq in fst:
@@ -327,7 +337,6 @@ def process_unoise_fasta(input_file):
         bc_field = seq_id_split[-1]
         bc, otu = bc_field.split(";")[:2]
         bc = "barcode=" + bc.split("=")[1]
-        new_seq_id = " ".join(seq_id_split[:-1]) + " " + bc + " sequence_type=16S " + "OTU=" + otu
+        new_seq_id = " ".join(seq_id_split[:-1]) + " " + bc + " sequence_type=" + seq_type + " OTU=" + otu
         acc.append([new_seq_id, seq])
     return acc
-    # io.write_fasta(acc, output_file)

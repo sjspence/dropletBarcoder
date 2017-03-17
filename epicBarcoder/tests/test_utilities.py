@@ -120,6 +120,16 @@ class TestUtilities(unittest.TestCase):
                                                      'Right'])
         self.assertEqual(exp_conns.to_string(), obs_conns.to_string())
 
+    def test_BarcodeContainer_unoise_singletons(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        self.assertEqual(list(container.get_singletons('16S')), [['Otu1'], ['Otu1']])
+
+    def test_BarcodeContainer_unoise_connections(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        connections = container.get_connections('16S')
+        self.assertEqual(list(connections['Left']), ['Otu1', 'Otu4' ,'Otu4', 'Otu5'])
+
+
 
 class TestReads(unittest.TestCase):
     def test_importFasta(self):
