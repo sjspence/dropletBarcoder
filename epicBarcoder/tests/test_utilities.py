@@ -116,12 +116,12 @@ class TestUtilities(unittest.TestCase):
 
     def test_BarcodeContainer_unoise_singletons(self):
         container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
-        singleton_list = sorted(list(container.get_singletons('16S')['OTU']))
+        singleton_list = sorted(list(container.bact_singletons['OTU']))
         self.assertEqual(singleton_list, ['Otu1', 'Otu1', 'Otu2'])
 
     def test_BarcodeContainer_unoise_connections(self):
         container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
-        connections = container.get_connections('16S')
+        connections = container.bact_connections
         self.assertEqual(list(connections['Connection']), ['Otu1,Otu2',
                                                            'Otu4,Otu5',
                                                            'Otu4,Otu6',

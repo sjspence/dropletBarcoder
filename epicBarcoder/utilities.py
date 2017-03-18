@@ -147,8 +147,12 @@ def unoise_helper(input_fasta, seq_type):
 
 def grouper(input_fasta, unoise, seq_type=None):
     if unoise:
-        table = get_grouped_table(unoise_helper(input_fasta, seq_type))
+        print("Converting fasta file..")
+        unoise_processed = unoise_helper(input_fasta, seq_type)
+        print("Reading in fasta file..")
+        table = get_grouped_table(unoise_processed)
     else:
+        print("Reading in fasta file..")
         table = get_grouped_table(fasta_to_bc_otu_table(input_fasta))
     return table
 
@@ -200,13 +204,13 @@ class BarcodeContainer(object):
         if input_16S:
             print("Parsing 16S data..")
             self.type_dict['16S'] = grouper(input_16S, unoise, '16S')
-            self.bact_connections = self.get_connections('16S')
-            self.bact_singletons = self.get_singletons('16S')
+            self.bact_connections = self.__get_connections('16S')
+            self.bact_singletons = self.__get_singletons('16S')
         if input_18S:
             print("Parsing 18S data..")
             self.type_dict['18S'] = grouper(input_18S, unoise, '18S')
-            self.euk_connections = self.get_connections('18S')
-            self.euk_singletons = self.get_singletons('18S')
+            self.euk_connections = self.__get_connections('18S')
+            self.euk_singletons = self.__get_singletons('18S')
         if input_funcs:
             print("Parsing functional gene data..")
             self.type_dict['Funcs'] = grouper(input_funcs, unoise, 'Func')
@@ -214,13 +218,13 @@ class BarcodeContainer(object):
         print("Extracting sample names")
         self.samples = self.get_samples()
 
-    def get_singletons(self, seq_type):
+    def __get_singletons(self, seq_type):
         print("Extracting singletons..")
         table = self.type_dict[seq_type]
         singletons = get_singletons(table)
         return singletons
 
-    def get_connections(self, seq_type):
+    def __get_connections(self, seq_type):
         table = self.type_dict[seq_type]
         connections = get_connections(table)
         print("Expanding connection combinations..")
