@@ -194,8 +194,7 @@ DATA
 class BarcodeContainer(object):
 
     def __init__(self, input_16S=None, input_18S=None, input_funcs=None, unoise=False):
-        ''' Input after preparing the fasta ids using function add_otus_to_fasta
-'''
+        ''' Input after preparing the fasta ids using function add_otus_to_fasta'''
         self.type_dict = {}
         if input_16S:
             self.type_dict['16S'] = grouper(input_16S, unoise, '16S')
