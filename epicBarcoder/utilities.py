@@ -102,6 +102,9 @@ def get_grouped_table(fasta_table):
 
 def get_singletons(grouped_table):
     singletons = grouped_table[grouped_table.apply(lambda x: len(x) == 1)]
+    singletons = singletons.reset_index()
+    singletons['OTU'] = singletons['OTU'].apply(lambda x: x[0])
+    singletons = singletons.loc[:, ['Sample', 'OTU']]
     return singletons
 
 
@@ -125,8 +128,9 @@ def expand_connections(connections):
         new_frame['Type'] = otu_type
         acc.append(new_frame)
     expanded = pd.concat(acc)
-    expanded = expanded.rename(columns={0: 'Left', 1: 'Right'})
-    expanded = expanded.loc[:, ['Sample', 'Barcode', 'Type', 'Left', 'Right']]
+    # expanded = expanded.rename(columns={0: 'Left', 1: 'Right'})
+    expanded['Connection'] = expanded[0] + "," + expanded[1]
+    expanded = expanded.loc[:, ['Sample', 'Connection']]
     expanded.index = range(len(expanded.index))
     return expanded
 
@@ -147,6 +151,45 @@ def grouper(input_fasta, unoise, seq_type=None):
         table = get_grouped_table(fasta_to_bc_otu_table(input_fasta))
     return table
 
+def filter_significant_connections(conn, abu):
+    conn.columns = [0, 1, 2]
+    abu.columns = [0, 1]
+    otu_count = abu[1].sum()
+    abu[2] = abu[1]/otu_count
+    pairwise = pd.DataFrame([sorted(i) for i in combinations(list(abu[0]), 2)])
+    pairwise_abu1 = pd.merge(pairwise, abu, on=0)
+    pairwise_abu2 = pd.merge(pairwise_abu1, abu, left_on='1_x', right_on=0)
+    pairwise_abu = pairwise_abu2.loc[:, ['0_x', '1_x', '2_x', '2_y']]
+    pairwise_abu.columns = ['Left', 'Right', 'Left_perc', 'Right_perc']
+    pairwise_abu['Lambda'] = pairwise_abu['Left_perc'] * pairwise_abu['Right_perc'] * otu_count
+    pairwise_tot = pd.merge(pairwise_abu, conn, left_on=['Left', 'Right'], right_on=[0, 1])
+    pairwise_tot = pairwise_tot.loc[:, ['Left', 'Right', 'Lambda', 2]]
+    pairwise_tot.columns = ['Left', 'Right', 'Lambda', 'Observed']
+    pairwise_tot['p-val'] = poisson.pmf(pairwise_tot['Observed'], pairwise_tot['Lambda'])
+    return pairwise_tot
+
+
+connection_template = '''DATASET_CONNECTION
+SEPARATOR COMMA
+DATASET_LABEL,example connections
+COLOR,#ff0ff0
+DRAW_ARROWS,0
+ARROW_SIZE,0
+MAXIMUM_LINE_WIDTH,10
+CURVE_ANGLE,0
+CENTER_CURVES,1
+ALIGN_TO_LABELS,1
+DATA
+#NODE1,NODE2,WIDTH,COLOR,LABEL
+'''
+
+abund_hist_template = '''DATASET_SIMPLEBAR
+SEPARATOR COMMA
+DATASET_LABEL,{}
+COLOR,{}
+DATA
+#ID1,value1
+'''
 
 class BarcodeContainer(object):
 
@@ -171,22 +214,86 @@ class BarcodeContainer(object):
         connections = get_connections(table)
         expanded = expand_connections(connections)
         return expanded
-        
 
+    def get_samples(self):
+        samples = pd.concat([self.type_dict[i] for i in ['16S', '18S', 'Funcs']
+                             if i in self.type_dict])
+        samples = samples.reset_index()['Sample']
+        samples = sorted(set(samples))
+        return samples
 
-def write_connections_and_abundances(conn_abund_list, file_name_prefix = None):
-    abundances, connections = conn_abund_list
-    for sample, obs in abundances.groupby('Sample'):
-        sample_name = sample + "_abunds.csv"
-        if file_name_prefix:
-            sample_name = file_name_prefix + sample_name
-        obs.iloc[:, [1,2]].to_csv(sample_name, index=None)
+    def get_total_itol_connections(self, seq_type, sample, color='#9AA0A6', label='Label'):
+        conns = self.get_connections(seq_type)
+        conns = conns[conns['Sample'] == sample]
+        conns = conns['Connection'].value_counts().reset_index()
+        conns['Connection'] = conns['Connection'].apply(str)
+        conns['Color'] = color
+        conns['Label'] = label
+        conns = conns['index'] + "," + conns['Connection'] + "," \
+                + conns['Color'] + "," + conns['Label']
+        conns = "\n".join(sorted(list(conns)))
+        conns = connection_template + conns
+        return conns
 
-    for sample, obs in connections.groupby('Sample'):
-        sample_name = sample + "_connections.csv"
-        if file_name_prefix:
-            sample_name = file_name_prefix + sample_name
-        obs.to_csv(sample_name, index=None)
+    def get_itol_abunds(self, seq_type, sample, color, label='Label'):
+        singletons = self.get_singletons(seq_type)
+        singletons = singletons[singletons['Sample'] == sample]
+        singletons = singletons['OTU'].value_counts().reset_index()
+        singletons['OTU'] = singletons['OTU'].apply(str)
+        singletons = sorted(list(singletons['index'] + "," + singletons['OTU']))
+        singletons = "\n".join(singletons)
+        hist_template = abund_hist_template.format(label, color)
+        singletons = hist_template + singletons
+        return singletons
+
+    def get_significant_connections(self, seq_type, sample):
+        singletons = self.get_singletons(seq_type)
+        singletons = singletons[singletons['Sample'] == sample]
+        singletons = singletons['OTU'].value_counts().reset_index()
+        conns = self.get_connections(seq_type)
+        conns = conns[conns['Sample'] == sample]
+        conns = conns['Connection'].value_counts().reset_index()
+        conns['Left'] = conns['index'].str.split(",").apply(lambda x: x[0])
+        conns['Right'] = conns['index'].str.split(",").apply(lambda x: x[1])
+        conns = conns.loc[:, ['Left', 'Right', 'Connection']]
+        filtered = filter_significant_connections(conns, singletons)
+        return filtered
+
+    def get_itol_sig_above_connections(self, seq_type, sample, out_file=None,
+                                       color='#ff0000', p_val=0.001, label='Label'):
+        sig_abu_conns = self.get_significant_connections(seq_type, sample)
+        sig_abu_conns = sig_abu_conns[sig_abu_conns['Lambda'] < sig_abu_conns['Observed']]
+        sig_abu_conns = sig_abu_conns[sig_abu_conns['p-val'] <= p_val]
+        sig_abu_conns['Observed'] = sig_abu_conns['Observed'].apply(str)
+        sig_abu_conns['Color'] = color
+        sig_abu_conns['Label'] = label
+        sig_table = sig_abu_conns['Left'] + "," + sig_abu_conns['Right'] + "," +\
+                    sig_abu_conns['Observed'] + "," + sig_abu_conns['Color'] +\
+                    "," + sig_abu_conns['Label']
+        sig_table = "\n".join(list(sig_table)).strip()
+        sig_table = connection_template + sig_table
+        if out_file:
+            with open(out_file, 'w') as f:
+                f.write(sig_table)
+        return sig_abu_conns
+
+    def get_itol_sig_below_connections(self, seq_type, sample, out_file=None,
+                                       color='#0000ff', p_val=0.001, label='Label'):
+        sig_abu_conns = self.get_significant_connections(seq_type, sample)
+        sig_abu_conns = sig_abu_conns[sig_abu_conns['Lambda'] > sig_abu_conns['Observed']]
+        sig_abu_conns = sig_abu_conns[sig_abu_conns['p-val'] <= p_val]
+        sig_abu_conns['Observed'] = sig_abu_conns['Observed'].apply(str)
+        sig_abu_conns['Color'] = color
+        sig_abu_conns['Label'] = label
+        sig_table = sig_abu_conns['Left'] + "," + sig_abu_conns['Right'] + "," +\
+                    sig_abu_conns['Observed'] + "," + sig_abu_conns['Color'] +\
+                    "," + sig_abu_conns['Label']
+        sig_table = "\n".join(list(sig_table)).strip()
+        sig_table = connection_template + sig_table
+        if out_file:
+            with open(out_file, 'w') as f:
+                f.write(sig_table)
+        return sig_abu_conns
 
 
 def process_mapping_file(mapping_file):
@@ -272,49 +379,6 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
     dereplicate.otuToHeaders(denoised, taxDict, uniqueDict, '08_all_seqs_tax.fa')
 
 
-def filter_significant_connections(connection_file, abundance_file, sig_above_file, sig_below_file):
-    conn = pd.read_csv(connection_file)
-    conn = conn.iloc[:, 1:]
-    conn.columns = [0, 1, 2]
-    abu = pd.read_csv(abundance_file)
-    abu.columns = [0, 1]
-    otu_count = abu[1].sum()
-    abu[2] = abu[1]/otu_count
-    pairwise = pd.DataFrame(list(combinations(list(abu[0]), 2)))
-    pairwise_abu1 = pd.merge(pairwise, abu, on=0)
-    pairwise_abu2 = pd.merge(pairwise_abu1, abu, left_on='1_x', right_on=0)
-    pairwise_abu = pairwise_abu2.loc[:, ['0_x', '1_x', '2_x', '2_y']]
-    pairwise_abu.columns = ['Left', 'Right', 'Left_perc', 'Right_perc']
-    pairwise_abu['Lambda'] = pairwise_abu['Left_perc'] * pairwise_abu['Right_perc'] * otu_count
-    pairwise_tot = pd.merge(pairwise_abu, conn, left_on=['Left', 'Right'], right_on=[0, 1])
-    pairwise_tot = pairwise_tot.loc[:, ['Left', 'Right', 'Lambda', 2]]
-    pairwise_tot.columns = ['Left', 'Right', 'Lambda', 'Observed']
-    pairwise_tot['p-val'] = poisson.pmf(pairwise_tot['Observed'], pairwise_tot['Lambda'])
-    pairwise_sig_above = pairwise_tot[(pairwise_tot['p-val'] < 0.001) & (pairwise_tot['Observed'] > pairwise_tot['Lambda'])]
-    pw_s_a_out = pairwise_sig_above.loc[:, ['Left', 'Right', 'Observed']]
-    pw_s_a_out['Color'] = '#ff0000'
-    pw_s_a_out['Label'] = 'Label'
-    pw_s_a_out.to_csv(sig_above_file, index=None) 
-    pairwise_sig_below = pairwise_tot[(pairwise_tot['p-val'] < 0.001) & (pairwise_tot['Observed'] < pairwise_tot['Lambda'])]
-    pw_s_b_out = pairwise_sig_below.loc[:, ['Left', 'Right', 'Observed']]
-    pw_s_b_out['Color'] = '#000099'
-    pw_s_b_out['Label'] = 'Label'
-    pw_s_b_out.to_csv(sig_below_file, index=None) 
-
-
-def output_abunds_and_connections(input_file, abund_output_file, connection_output_file):
-    a = pd.read_csv(input_file, sep="\t", header=None)
-    a[1] = a[1].str.split(",")
-    singlets = pd.Series([i[0] for i in list(a[~a[1].isnull()][1]) if len(i) == 1])
-    singlets.value_counts().reset_index().to_csv(abund_output_file, index=None, header=None)
-    combs = list(pd.Series([list(combinations(i, 2)) for i in list(a[~a[1].isnull()][1]) if len(i) > 1]))
-    connections = pd.DataFrame([sorted(i) for i in list(chain.from_iterable(combs))])
-    connections = connections.groupby(0)[1].value_counts()
-    connections.name = 'Count'
-    connections = connections.reset_index()
-    connections['Color'] = '#ff0000'
-    connections['Label'] = 'Label'
-    connections.to_csv(connection_output_file, header=None, index=None)
 
 
 def output_functions(input_file, output_file, gene_name):

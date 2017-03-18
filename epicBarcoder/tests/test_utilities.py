@@ -1,7 +1,6 @@
 import unittest
 import os
 import pandas as pd
-from itertools import combinations
 from .. import utilities, reads, io
 
 os.chdir("epicBarcoder/tests/")
@@ -41,18 +40,19 @@ class TestUtilities(unittest.TestCase):
         pass
 
     def test_process_unoise_fasta(self):
-        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta")
+        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         first_entry = processed_fasta_list[0]
         header, seq = first_entry
         self.assertEqual(header.split()[-1], "OTU=Otu1")
         self.assertEqual(seq[:10], "CAGCAGCCGC")
 
     def test_fasta_to_bc_otu_table(self):
-        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta")
+        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        comp_list = [[">OM8s16_10", "OM8s16", "AGGGGGGGCTCCGGTGTCTG", "16S", "Otu1"],
+        comp_list = [[">OM8s16_9", "OM8s16", "CCCCGGGGCTCCGGTGTCTG", "16S", "Otu1"],
+                     [">OM8s16_10", "OM8s16", "AGGGGGGGCTCCGGTGTCTG", "16S", "Otu2"],
                      [">OM8s17_11", "OM8s17", "AAAATTTTCTCCGGTGTCTG", "16S", "Otu1"],
                      [">OM8s18_12", "OM8s18", "ATTCGAATGAAGGTTGCTTA", "16S", "Otu3"],
                      [">OM8s18_13", "OM8s18", "ATTCGAATGAAGGTTGCTTA", "16S", "Otu3"],
@@ -60,74 +60,106 @@ class TestUtilities(unittest.TestCase):
                      [">OM8s16_15", "OM8s16", "GGCCGGCCGGCCGTTGCTTA", "16S", "Otu2"],
                      [">OM8s19_16", "OM8s19", "TTAATTAAATTAGTTGCTTA", "16S", "Otu4"],
                      [">OM8s19_17", "OM8s19", "TTAATTAAATTAGTTGCTTA", "16S", "Otu5"],
-                     [">OM8s19_18", "OM8s19", "TTAATTAAATTAGTTGCTTA", "16S", "Otu6"]]
+                     [">OM8s19_18", "OM8s19", "TTAATTAAATTAGTTGCTTA", "16S", "Otu6"],
+                     [">OM8s19_19", "OM8s19", "TTAATTAAATTAGTTGCTTA", "16S", "Otu6"]]
         comp_tbl = pd.DataFrame(comp_list, columns=['Read', 'Sample', 'Barcode', 'Type', 'OTU'])
-        print(processed_table)
         self.assertEqual(comp_tbl.to_string(), processed_table.to_string())
 
     def test_get_grouped_table(self):
-        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta")
+        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
         grouped_table = utilities.get_grouped_table(processed_table)
-        print(grouped_table)
         items = list(grouped_table)
-        self.assertEqual(items[0], ['Otu1'])
-        self.assertEqual(set(items[1]), {'Otu1', 'Otu2'})
-        self.assertEqual(items[2], ['Otu1'])
-        self.assertEqual(set(items[3]), {'Otu3'})
-        self.assertEqual(set(items[4]), {'Otu4', 'Otu5', 'Otu6'})
+        self.assertEqual(items[0], ['Otu2'])
+        self.assertEqual(set(items[2]), {'Otu1', 'Otu2'})
+        self.assertEqual(items[3], ['Otu1'])
+        self.assertEqual(set(items[4]), {'Otu3'})
+        self.assertEqual(set(items[5]), {'Otu4', 'Otu5', 'Otu6'})
 
     def test_get_singletons(self):
-        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta")
+        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
         grouped_table = utilities.get_grouped_table(processed_table)
         singletons = utilities.get_singletons(grouped_table)
-        print(singletons)
-        self.assertEqual(list(singletons), [['Otu1'], ['Otu1']])
+        singleton_list = sorted(list(singletons['OTU']))
+        self.assertEqual(singleton_list, ['Otu1', 'Otu1', 'Otu2'])
 
     def test_get_connections(self):
-        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta")
+        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
         grouped_table = utilities.get_grouped_table(processed_table)
         connections = utilities.get_connections(grouped_table)
-        print(connections)
         self.assertEqual(list(connections['OTU']), [['Otu1', 'Otu2'],
                                                     ['Otu4', 'Otu5', 'Otu6']])
 
 
     def test_expand_connections(self):
-        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta")
+        processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
         grouped_table = utilities.get_grouped_table(processed_table)
         connections = utilities.get_connections(grouped_table)
         obs_conns = utilities.expand_connections(connections)
-        exp_conns = [['OM8s16', 'GGCCGGCCGGCCGTTGCTTA', '16S', 'Otu1', 'Otu2'],
-                     ['OM8s19', 'TTAATTAAATTAGTTGCTTA', '16S', 'Otu4', 'Otu5'],
-                     ['OM8s19', 'TTAATTAAATTAGTTGCTTA', '16S', 'Otu4', 'Otu6'],
-                     ['OM8s19', 'TTAATTAAATTAGTTGCTTA', '16S', 'Otu5', 'Otu6']]
-        exp_conns = pd.DataFrame(exp_conns, columns=['Sample',
-                                                     'Barcode',
-                                                     'Type',
-                                                     'Left',
-                                                     'Right'])
+        exp_conns = [['OM8s16', 'Otu1,Otu2'],
+                     ['OM8s19', 'Otu4,Otu5'],
+                     ['OM8s19', 'Otu4,Otu6'],
+                     ['OM8s19', 'Otu5,Otu6']]
+        exp_conns = pd.DataFrame(exp_conns, columns=['Sample', 'Connection'])
         self.assertEqual(exp_conns.to_string(), obs_conns.to_string())
 
     def test_BarcodeContainer_unoise_singletons(self):
         container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
-        self.assertEqual(list(container.get_singletons('16S')), [['Otu1'], ['Otu1']])
+        singleton_list = sorted(list(container.get_singletons('16S')['OTU']))
+        self.assertEqual(singleton_list, ['Otu1', 'Otu1', 'Otu2'])
 
     def test_BarcodeContainer_unoise_connections(self):
         container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
         connections = container.get_connections('16S')
-        self.assertEqual(list(connections['Left']), ['Otu1', 'Otu4' ,'Otu4', 'Otu5'])
+        self.assertEqual(list(connections['Connection']), ['Otu1,Otu2',
+                                                           'Otu4,Otu5',
+                                                           'Otu4,Otu6',
+                                                           'Otu5,Otu6'])
+
+    def test_BarcodeContainer_get_samples(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        samples = container.get_samples()
+        self.assertEqual(samples, ['OM8s16', 'OM8s17', 'OM8s18', 'OM8s19'])
+
+    def test_BarcodeContainer_get_itol_connections(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        itol_connections = container.get_total_itol_connections('16S', 'OM8s19', '#ff0000')
+        with open("test_itol_total_connections.txt") as f:
+            test_itol_connections = ''.join(list(f)).strip()
+        self.assertEqual(test_itol_connections, itol_connections)
+
+    def test_BarcodeContainer_get_itol_abunds(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        itol_abunds = container.get_itol_abunds('16S', 'OM8s16', '#ff0000')
+        with open("test_itol_abund.txt") as f:
+            test_itol_abunds = ''.join(list(f)).strip()
+        self.assertEqual(test_itol_abunds, itol_abunds)
+
+    def test_filter_significant_connections(self):
+        conn = pd.read_csv("test_connections.csv", header=None)
+        abu = pd.read_csv("test_singletons.csv", header=None)
+        sig_conns = utilities.filter_significant_connections(conn, abu)
+        self.assertAlmostEqual(sig_conns['p-val'][0], 5.9e-82)
+
+    def test_BarcodeContainer_get_significant_connections(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        sig_conns = container.get_significant_connections('16S', 'OM8s16')
+        self.assertAlmostEqual(sig_conns['p-val'][0], 0.303265, places=5)
+
+    def test_BarcodeContainer_get_itol_above_connections(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        abund = container.get_itol_sig_above_connections('16S', 'OM8s16', '#ff0000')
 
 
 

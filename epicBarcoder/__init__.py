@@ -7,9 +7,9 @@ from .io import exportFasta, exportPairedFasta, exportOTUtable, \
         write_fasta, write_fastq
 from .utilities import clusterWithUsearch, filter_significant_connections, \
         process_fastq_and_mapping_file, add_otus_to_fasta, \
-        output_abunds_and_connections, output_functions, fasta_to_bc_otu_table, \
+        output_functions, fasta_to_bc_otu_table, \
         get_grouped_table, make_otus_and_assign, \
-        write_connections_and_abundances, process_unoise_fasta
+        process_unoise_fasta
 from .otuTables import importUsearchHits, importTaxonomy, buildOTUtable, \
 	invertHits
 from .itol import itolHeatmap
