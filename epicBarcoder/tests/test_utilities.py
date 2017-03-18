@@ -157,11 +157,6 @@ class TestUtilities(unittest.TestCase):
         sig_conns = container.get_significant_connections('16S', 'OM8s16')
         self.assertAlmostEqual(sig_conns['p-val'][0], 0.303265, places=5)
 
-    def test_BarcodeContainer_get_itol_above_connections(self):
-        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
-        abund = container.get_itol_sig_above_connections('16S', 'OM8s16', '#ff0000')
-
-
 
 class TestReads(unittest.TestCase):
     def test_importFasta(self):
