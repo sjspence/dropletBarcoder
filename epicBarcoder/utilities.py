@@ -215,7 +215,7 @@ class BarcodeContainer(object):
             print("Parsing functional gene data..")
             self.type_dict['Funcs'] = grouper(input_funcs, unoise, 'Func')
 
-        print("Extracting sample names")
+        print("Extracting sample names..")
         self.samples = self.get_samples()
 
     def __get_singletons(self, seq_type):
@@ -313,7 +313,7 @@ class BarcodeContainer(object):
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(sig_table)
-        return sig_abu_conns
+        return sig_table
 
     def get_itol_sig_below_connections(self, seq_type, sample, out_file=None,
                                        color='#0000ff', p_val=0.001, label='Label'):
@@ -331,7 +331,7 @@ class BarcodeContainer(object):
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(sig_table)
-        return sig_abu_conns
+        return sig_table
 
 
 def process_mapping_file(mapping_file):
