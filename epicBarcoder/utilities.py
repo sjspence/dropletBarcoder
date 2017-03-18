@@ -216,7 +216,7 @@ class BarcodeContainer(object):
             self.type_dict['Funcs'] = grouper(input_funcs, unoise, 'Func')
 
         print("Extracting sample names..")
-        self.samples = self.get_samples()
+        self.samples = self.__get_samples()
 
     def __get_singletons(self, seq_type):
         print("Extracting singletons..")
@@ -231,12 +231,30 @@ class BarcodeContainer(object):
         expanded = expand_connections(connections)
         return expanded
 
-    def get_samples(self):
+    def __get_samples(self):
         samples = pd.concat([self.type_dict[i] for i in ['16S', '18S', 'Funcs']
                              if i in self.type_dict])
         samples = samples.reset_index()['Sample']
         samples = sorted(set(samples))
         return samples
+
+    def print_itol_files(self, seq_type):
+        for sample in self.samples:
+            file_type = 'abunds'
+            file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
+            self.get_itol_abunds(seq_type, sample, color="#ff0000", out_file=file_name)
+
+            file_type = 'tot_connections'
+            file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
+            self.get_total_itol_connections(seq_type, sample, color="#ff0000", out_file=file_name)
+
+            file_type = 'below_connections'
+            file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
+            self.get_itol_sig_below_connections(seq_type, sample, color="#ff0000", out_file=file_name)
+
+            file_type = 'above_connections'
+            file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
+            self.get_itol_sig_above_connections(seq_type, sample, color="#ff0000", out_file=file_name)
 
     def get_total_itol_connections(self, seq_type, sample, out_file=None,
                                    color='#9AA0A6', label='Label'):
@@ -258,7 +276,8 @@ class BarcodeContainer(object):
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(conns)
-        return conns
+        else:
+            return conns
 
     def get_itol_abunds(self, seq_type, sample, color, out_file=None, label='Label'):
 
@@ -278,7 +297,8 @@ class BarcodeContainer(object):
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(singletons)
-        return singletons
+        else:
+            return singletons
 
     def get_significant_connections(self, seq_type, sample):
         if seq_type == '16S':
@@ -313,7 +333,8 @@ class BarcodeContainer(object):
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(sig_table)
-        return sig_table
+        else:
+            return sig_table
 
     def get_itol_sig_below_connections(self, seq_type, sample, out_file=None,
                                        color='#0000ff', p_val=0.001, label='Label'):
@@ -331,7 +352,8 @@ class BarcodeContainer(object):
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(sig_table)
-        return sig_table
+        else:
+            return sig_table
 
 
 def process_mapping_file(mapping_file):

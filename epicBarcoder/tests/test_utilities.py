@@ -129,12 +129,12 @@ class TestUtilities(unittest.TestCase):
 
     def test_BarcodeContainer_get_samples(self):
         container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
-        samples = container.get_samples()
+        samples = container.samples
         self.assertEqual(samples, ['OM8s16', 'OM8s17', 'OM8s18', 'OM8s19'])
 
     def test_BarcodeContainer_get_itol_connections(self):
         container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
-        itol_connections = container.get_total_itol_connections('16S', 'OM8s19', '#ff0000')
+        itol_connections = container.get_total_itol_connections('16S', 'OM8s19', color='#9AA0A6')
         with open("test_itol_total_connections.txt") as f:
             test_itol_connections = ''.join(list(f)).strip()
         self.assertEqual(test_itol_connections, itol_connections)
