@@ -222,7 +222,8 @@ class BarcodeContainer(object):
         samples = sorted(set(samples))
         return samples
 
-    def get_total_itol_connections(self, seq_type, sample, color='#9AA0A6', label='Label'):
+    def get_total_itol_connections(self, seq_type, sample, out_file=None,
+                                   color='#9AA0A6', label='Label'):
         conns = self.get_connections(seq_type)
         conns = conns[conns['Sample'] == sample]
         conns = conns['Connection'].value_counts().reset_index()
@@ -233,9 +234,12 @@ class BarcodeContainer(object):
                 + conns['Color'] + "," + conns['Label']
         conns = "\n".join(sorted(list(conns)))
         conns = connection_template + conns
+        if out_file:
+            with open(out_file, 'w') as f:
+                f.write(conns)
         return conns
 
-    def get_itol_abunds(self, seq_type, sample, color, label='Label'):
+    def get_itol_abunds(self, seq_type, sample, color, out_file=None, label='Label'):
         singletons = self.get_singletons(seq_type)
         singletons = singletons[singletons['Sample'] == sample]
         singletons = singletons['OTU'].value_counts().reset_index()
@@ -244,6 +248,9 @@ class BarcodeContainer(object):
         singletons = "\n".join(singletons)
         hist_template = abund_hist_template.format(label, color)
         singletons = hist_template + singletons
+        if out_file:
+            with open(out_file, 'w') as f:
+                f.write(singletons)
         return singletons
 
     def get_significant_connections(self, seq_type, sample):
