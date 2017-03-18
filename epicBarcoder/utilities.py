@@ -109,8 +109,10 @@ def get_singletons(grouped_table):
 
 
 def get_connections(grouped_table):
+    print("Filtering out singletons..")
     connections = grouped_table[grouped_table.apply(lambda x: len(set(x)) > 1)]
     connections = connections.reset_index()
+    print("Filtering out multiple entries..")
     connections['OTU'] = connections['OTU'].apply(lambda x: sorted(list(set(x))))
     return connections
 
@@ -128,7 +130,6 @@ def expand_connections(connections):
         new_frame['Type'] = otu_type
         acc.append(new_frame)
     expanded = pd.concat(acc)
-    # expanded = expanded.rename(columns={0: 'Left', 1: 'Right'})
     expanded['Connection'] = expanded[0] + "," + expanded[1]
     expanded = expanded.loc[:, ['Sample', 'Connection']]
     expanded.index = range(len(expanded.index))
@@ -197,13 +198,24 @@ class BarcodeContainer(object):
         ''' Input after preparing the fasta ids using function add_otus_to_fasta'''
         self.type_dict = {}
         if input_16S:
+            print("Parsing 16S data..")
             self.type_dict['16S'] = grouper(input_16S, unoise, '16S')
+            self.bact_connections = self.get_connections('16S')
+            self.bact_singletons = self.get_singletons('16S')
         if input_18S:
+            print("Parsing 18S data..")
             self.type_dict['18S'] = grouper(input_18S, unoise, '18S')
+            self.euk_connections = self.get_connections('18S')
+            self.euk_singletons = self.get_singletons('18S')
         if input_funcs:
+            print("Parsing functional gene data..")
             self.type_dict['Funcs'] = grouper(input_funcs, unoise, 'Func')
 
+        print("Extracting sample names")
+        self.samples = self.get_samples()
+
     def get_singletons(self, seq_type):
+        print("Extracting singletons..")
         table = self.type_dict[seq_type]
         singletons = get_singletons(table)
         return singletons
@@ -211,6 +223,7 @@ class BarcodeContainer(object):
     def get_connections(self, seq_type):
         table = self.type_dict[seq_type]
         connections = get_connections(table)
+        print("Expanding connection combinations..")
         expanded = expand_connections(connections)
         return expanded
 
@@ -223,7 +236,12 @@ class BarcodeContainer(object):
 
     def get_total_itol_connections(self, seq_type, sample, out_file=None,
                                    color='#9AA0A6', label='Label'):
-        conns = self.get_connections(seq_type)
+        if seq_type == '16S':
+            conns = self.bact_connections
+        elif seq_type == '18S':
+            conns = self.euk_connections
+        else:
+            raise TypeError('Unknown sequence type')
         conns = conns[conns['Sample'] == sample]
         conns = conns['Connection'].value_counts().reset_index()
         conns['Connection'] = conns['Connection'].apply(str)
@@ -239,7 +257,13 @@ class BarcodeContainer(object):
         return conns
 
     def get_itol_abunds(self, seq_type, sample, color, out_file=None, label='Label'):
-        singletons = self.get_singletons(seq_type)
+
+        if seq_type == '16S':
+            singletons = self.bact_singletons
+        elif seq_type == '18S':
+            singletons = self.euk_singletons
+        else:
+            raise TypeError('Unknown sequence type')
         singletons = singletons[singletons['Sample'] == sample]
         singletons = singletons['OTU'].value_counts().reset_index()
         singletons['OTU'] = singletons['OTU'].apply(str)
@@ -253,10 +277,14 @@ class BarcodeContainer(object):
         return singletons
 
     def get_significant_connections(self, seq_type, sample):
-        singletons = self.get_singletons(seq_type)
+        if seq_type == '16S':
+            singletons = self.bact_singletons
+            conns = self.bact_connections
+        if seq_type == '18S':
+            singletons = self.euk_singletons
+            conns = self.euk_connections
         singletons = singletons[singletons['Sample'] == sample]
         singletons = singletons['OTU'].value_counts().reset_index()
-        conns = self.get_connections(seq_type)
         conns = conns[conns['Sample'] == sample]
         conns = conns['Connection'].value_counts().reset_index()
         conns['Left'] = conns['index'].str.split(",").apply(lambda x: x[0])
