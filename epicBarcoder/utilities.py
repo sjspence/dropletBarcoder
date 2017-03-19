@@ -267,7 +267,7 @@ class BarcodeContainer(object):
             file_type = 'tot_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
             print("Writing total connection file {}".format(file_name))
-            self.get_total_itol_connections(seq_type, sample, color="#9aa0a6", out_file=file_name, label=sample + "tot")
+            self.get_total_itol_connections(seq_type, sample, color="#9aa0a6", out_file=file_name, label=sample + "_tot")
 
             file_type = 'below_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
