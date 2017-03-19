@@ -95,6 +95,7 @@ def parse_unoise(unoise_file, seq_type):
     otu.columns = ['Sample', 'Barcode', 'Type', 'OTU']
     grouped_table = otu.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
     tax = pd.DataFrame(tax_acc)
+    tax.columns = ['OTU', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species']
     return [grouped_table, tax] 
 
 def fasta_to_bc_otu_table(fasta_file, output_file=None):
@@ -350,8 +351,8 @@ class BarcodeContainer(object):
                     sig_abu_conns['Observed'] + "," + sig_abu_conns['Color'] +\
                     "," + sig_abu_conns['Label']
         sig_table = "\n".join(list(sig_table)).strip()
-        connection_template = connection_template.format(label)
-        sig_table = connection_template + sig_table
+        conn_template = connection_template.format(label)
+        sig_table = conn_template + sig_table
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(sig_table)
@@ -370,8 +371,8 @@ class BarcodeContainer(object):
                     sig_abu_conns['Observed'] + "," + sig_abu_conns['Color'] +\
                     "," + sig_abu_conns['Label']
         sig_table = "\n".join(list(sig_table)).strip()
-        connection_template = connection_template.format(label)
-        sig_table = connection_template + sig_table
+        conn_template = connection_template.format(label)
+        sig_table = conn_template + sig_table
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(sig_table)

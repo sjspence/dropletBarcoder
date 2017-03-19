@@ -65,19 +65,6 @@ class TestUtilities(unittest.TestCase):
         comp_tbl = pd.DataFrame(comp_list, columns=['Read', 'Sample', 'Barcode', 'Type', 'OTU'])
         self.assertEqual(comp_tbl.to_string(), processed_table.to_string())
 
-
-    def test_parse_unoise(self):
-        parsed = utilities.parse_unoise("test_tax.fasta", "16S")
-        print(parsed)
-
-    def test_grouper(self):
-        grouped = utilities.grouper("test_tax_trad.fasta", unoise=False, seq_type='16S')
-        print(grouped[0])
-
-    def test_grouper2(self):
-        grouped = utilities.grouper("test_tax.fasta", unoise=True, seq_type='16S')
-        print(grouped[0])
-
     def test_get_grouped_table(self):
         processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         io.write_fasta(processed_fasta_list, "processed.fasta")
