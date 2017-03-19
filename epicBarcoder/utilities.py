@@ -247,8 +247,8 @@ class BarcodeContainer(object):
         with open(pickle_name, "wb") as f:
             pickle.dump(self, f)
 
-        print("Writing out bacterial iTOL files..")
-        self.write_itol_files('16S')
+        # print("Writing out bacterial iTOL files..")
+        # self.write_itol_files('16S')
 
     def __get_singletons(self, seq_type):
         print("Extracting singletons..")
