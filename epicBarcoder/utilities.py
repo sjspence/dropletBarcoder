@@ -131,7 +131,7 @@ def parse_unoise(unoise_file, seq_type):
     otu = pd.DataFrame(otu_acc)
     otu.columns = ['Sample', 'Barcode', 'Type', 'OTU']
     grouped_table = otu.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
-    tax = pd.DataFrame(tax_acc)
+    tax = pd.DataFrame(tax_acc).drop_duplicates()
     tax.columns = ['OTU', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species']
     return [grouped_table, tax]
 
