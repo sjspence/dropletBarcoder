@@ -271,8 +271,8 @@ class BarcodeContainer(object):
         return samples
 
     def write_itol_files(self, seq_type):
-        popup_name = self.samples[0] + "_popup.txt"
-        self.get_popup_for_itol(out_file=popup_name)
+        # popup_name = self.samples[0] + "_popup.txt"
+        # self.get_popup_for_itol(out_file=popup_name)
         for sample in self.samples:
             file_type = 'abunds'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
