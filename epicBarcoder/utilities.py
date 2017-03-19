@@ -247,6 +247,9 @@ class BarcodeContainer(object):
         with open(pickle_name, "wb") as f:
             pickle.dump(self, f)
 
+        print("Writing out bacterial iTOL files..")
+        self.write_itol_files('16S')
+
     def __get_singletons(self, seq_type):
         print("Extracting singletons..")
         table = self.type_dict[seq_type]
@@ -269,7 +272,7 @@ class BarcodeContainer(object):
 
     def write_itol_files(self, seq_type):
         popup_name = samples[0] + "_popup.txt"
-        self.get_popup_for_itol(popup_name)
+        self.get_popup_for_itol(out_file=popup_name)
         for sample in self.samples:
             file_type = 'abunds'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
