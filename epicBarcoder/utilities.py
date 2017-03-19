@@ -4,14 +4,51 @@ import random
 import string
 import pickle
 from collections import defaultdict
-from itertools import combinations, chain
+from itertools import combinations
 from scipy.stats import poisson
 import pandas as pd
 from . import io
 from . import dereplicate
 from . import reads
 
+
 env = os.environ
+
+
+connection_template = '''DATASET_CONNECTION
+SEPARATOR COMMA
+DATASET_LABEL,{}
+COLOR,#ff0ff0
+DRAW_ARROWS,0
+ARROW_SIZE,0
+MAXIMUM_LINE_WIDTH,10
+CURVE_ANGLE,0
+CENTER_CURVES,1
+ALIGN_TO_LABELS,0
+DATA
+#NODE1,NODE2,WIDTH,COLOR,LABEL
+'''
+
+
+abund_hist_template = '''DATASET_SIMPLEBAR
+SEPARATOR COMMA
+DATASET_LABEL,{}
+WIDTH,300
+BORDER_WIDTH,5
+COLOR,{}
+DATA
+#ID1,value1
+'''
+
+
+popup_template = '''POPUP_INFO
+SEPARATOR COMMA
+DATA
+#NODE_ID,POPUP_TITLE,POPUP_CONTENT
+#popup for leaf node 9606
+#9606,Homo sapiens info popup,Detailed stuff
+'''
+
 
 def generate_id(size=6):
     """ Generate random sequences of characters for temporary file names.
@@ -78,8 +115,7 @@ def add_otus_to_fasta(seq_file, output_file, uc_files):
         seq_acc.append([seq_id, seq])
     io.write_fasta(seq_acc, output_file)
 
-# >OM8s18_13 HWI-M04407:1:1111:19619:5413#ACTAAGAT/1 orig_bc=ACTAAGAT new_bc=ACTAAGAT bc_diffs=0 droplet_bc=ATTCGAATGAAGGTTGCTTA;Otu3;tax=k:Bacteria,p:Proteobacteria,c:Gammaproteobacteria,o:Alteromonadales,f:Shewanellaceae,g:Shewanella,s:oneidensis;
-# Sample, Barcode, Type, OTU
+
 def parse_unoise(unoise_file, seq_type):
     fasta_iter = io.read_fasta(unoise_file)
     otu_acc = []
@@ -97,7 +133,8 @@ def parse_unoise(unoise_file, seq_type):
     grouped_table = otu.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
     tax = pd.DataFrame(tax_acc)
     tax.columns = ['OTU', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species']
-    return [grouped_table, tax] 
+    return [grouped_table, tax]
+
 
 def fasta_to_bc_otu_table(fasta_file, output_file=None):
     fasta_list = list(io.read_fasta(fasta_file))
@@ -157,15 +194,6 @@ def expand_connections(connections):
     return expanded
 
 
-def unoise_helper(input_fasta, seq_type):
-    tmp_file_name = generate_id(size=8) + ".fasta"
-    processed = process_unoise_fasta(input_fasta, seq_type)
-    io.write_fasta(processed, tmp_file_name)
-    table = fasta_to_bc_otu_table(tmp_file_name)
-    os.remove(tmp_file_name)
-    return table
-
-
 def grouper(input_fasta, unoise, seq_type=None):
     print("Reading in fasta file..")
     if unoise:
@@ -191,30 +219,6 @@ def filter_significant_connections(conn, abu):
     pairwise_tot['p-val'] = poisson.pmf(pairwise_tot['Observed'], pairwise_tot['Lambda'])
     return pairwise_tot
 
-
-connection_template = '''DATASET_CONNECTION
-SEPARATOR COMMA
-DATASET_LABEL,{}
-COLOR,#ff0ff0
-DRAW_ARROWS,0
-ARROW_SIZE,0
-MAXIMUM_LINE_WIDTH,10
-CURVE_ANGLE,0
-CENTER_CURVES,1
-ALIGN_TO_LABELS,0
-DATA
-#NODE1,NODE2,WIDTH,COLOR,LABEL
-'''
-
-abund_hist_template = '''DATASET_SIMPLEBAR
-SEPARATOR COMMA
-DATASET_LABEL,{}
-WIDTH,300
-BORDER_WIDTH,5
-COLOR,{}
-DATA
-#ID1,value1
-'''
 
 class BarcodeContainer(object):
 
@@ -264,6 +268,8 @@ class BarcodeContainer(object):
         return samples
 
     def write_itol_files(self, seq_type):
+        popup_name = samples[0] + "_popup.txt"
+        self.get_popup_for_itol(popup_name)
         for sample in self.samples:
             file_type = 'abunds'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
@@ -386,6 +392,21 @@ class BarcodeContainer(object):
                 f.write(sig_table)
         else:
             return sig_table
+
+    def get_popup_for_itol(self, out_file=None):
+        tax = self.tax
+        tax_table = tax['Kingdom'] + ";" + tax['Phylum'] + ";" + tax['Order'] + ";" +\
+                    tax['Family'] + ";" + tax['Genus'] + ";" + tax['Species']
+        tax_name = tax['Genus'].str.split(":").apply(lambda x: x[1]) + " " +\
+                   tax['Species'].str.split(":").apply(lambda x: x[1].split(";")[0])
+        popup_table = tax['OTU'] + "," + tax_name + "," + tax_table
+        popup_str = "\n".join(list(popup_table)).strip()
+        popup_str = popup_template + popup_str
+        if out_file:
+            with open(out_file, 'w') as f:
+                f.write(popup_str)
+        else:
+            return popup_str
 
 
 def process_mapping_file(mapping_file):

@@ -157,6 +157,12 @@ class TestUtilities(unittest.TestCase):
         sig_conns = container.get_significant_connections('16S', 'OM8s16')
         self.assertAlmostEqual(sig_conns['p-val'][0], 0.303265, places=5)
 
+    def test_BarcodeContainer_get_itol_popup(self):
+        container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
+        popup_table = container.get_popup_for_itol()
+        self.assertEqual(popup_table.split("\n")[10].split(",")[0], 'Otu3')
+        # print(container.tax)
+
 
 class TestReads(unittest.TestCase):
     def test_importFasta(self):
