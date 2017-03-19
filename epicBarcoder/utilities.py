@@ -209,7 +209,7 @@ abund_hist_template = '''DATASET_SIMPLEBAR
 SEPARATOR COMMA
 DATASET_LABEL,{}
 WIDTH,300
-BORDER_WIDTH=5
+BORDER_WIDTH,5
 COLOR,{}
 DATA
 #ID1,value1
@@ -262,7 +262,7 @@ class BarcodeContainer(object):
             file_type = 'abunds'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
             print("Writing abundance file {}".format(file_name))
-            self.get_itol_abunds(seq_type, sample, color="#ff0000", out_file=file_name)
+            self.get_itol_abunds(seq_type, sample, color="#ff0000", out_file=file_name, label=sample + "_abund")
 
             file_type = 'tot_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
