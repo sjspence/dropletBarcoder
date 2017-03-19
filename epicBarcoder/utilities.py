@@ -2,6 +2,7 @@ import os
 import subprocess
 import random
 import string
+import pickle
 from collections import defaultdict
 from itertools import combinations, chain
 from scipy.stats import poisson
@@ -236,6 +237,11 @@ class BarcodeContainer(object):
 
         print("Extracting sample names..")
         self.samples = self.__get_samples()
+
+        print("Pickling self..")
+        pickle_name = input_16S.split(".")[0] + ".pickle"
+        with open(pickle_name, "wb") as f:
+            pickle.dump(self, f)
 
     def __get_singletons(self, seq_type):
         print("Extracting singletons..")
