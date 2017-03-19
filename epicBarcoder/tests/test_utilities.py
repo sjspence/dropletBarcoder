@@ -65,12 +65,25 @@ class TestUtilities(unittest.TestCase):
         comp_tbl = pd.DataFrame(comp_list, columns=['Read', 'Sample', 'Barcode', 'Type', 'OTU'])
         self.assertEqual(comp_tbl.to_string(), processed_table.to_string())
 
+
+    def test_parse_unoise(self):
+        parsed = utilities.parse_unoise("test_tax.fasta", "16S")
+        print(parsed)
+
+    def test_grouper(self):
+        grouped = utilities.grouper("test_tax_trad.fasta", unoise=False, seq_type='16S')
+        print(grouped[0])
+
+    def test_grouper2(self):
+        grouped = utilities.grouper("test_tax.fasta", unoise=True, seq_type='16S')
+        print(grouped[0])
+
     def test_get_grouped_table(self):
         processed_fasta_list = utilities.process_unoise_fasta("test_tax.fasta", '16S')
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table = utilities.get_grouped_table(processed_table)
+        grouped_table, _ = utilities.get_grouped_table(processed_table)
         items = list(grouped_table)
         self.assertEqual(items[0], ['Otu2'])
         self.assertEqual(set(items[2]), {'Otu1', 'Otu2'})
@@ -83,7 +96,7 @@ class TestUtilities(unittest.TestCase):
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table = utilities.get_grouped_table(processed_table)
+        grouped_table, _ = utilities.get_grouped_table(processed_table)
         singletons = utilities.get_singletons(grouped_table)
         singleton_list = sorted(list(singletons['OTU']))
         self.assertEqual(singleton_list, ['Otu1', 'Otu1', 'Otu2'])
@@ -93,7 +106,7 @@ class TestUtilities(unittest.TestCase):
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table = utilities.get_grouped_table(processed_table)
+        grouped_table, _ = utilities.get_grouped_table(processed_table)
         connections = utilities.get_connections(grouped_table)
         self.assertEqual(list(connections['OTU']), [['Otu1', 'Otu2'],
                                                     ['Otu4', 'Otu5', 'Otu6']])
@@ -104,7 +117,7 @@ class TestUtilities(unittest.TestCase):
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table = utilities.get_grouped_table(processed_table)
+        grouped_table, _ = utilities.get_grouped_table(processed_table)
         connections = utilities.get_connections(grouped_table)
         obs_conns = utilities.expand_connections(connections)
         exp_conns = [['OM8s16', 'Otu1,Otu2'],

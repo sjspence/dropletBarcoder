@@ -77,6 +77,25 @@ def add_otus_to_fasta(seq_file, output_file, uc_files):
         seq_acc.append([seq_id, seq])
     io.write_fasta(seq_acc, output_file)
 
+# >OM8s18_13 HWI-M04407:1:1111:19619:5413#ACTAAGAT/1 orig_bc=ACTAAGAT new_bc=ACTAAGAT bc_diffs=0 droplet_bc=ATTCGAATGAAGGTTGCTTA;Otu3;tax=k:Bacteria,p:Proteobacteria,c:Gammaproteobacteria,o:Alteromonadales,f:Shewanellaceae,g:Shewanella,s:oneidensis;
+# Sample, Barcode, Type, OTU
+def parse_unoise(unoise_file, seq_type):
+    fasta_iter = io.read_fasta(unoise_file)
+    otu_acc = []
+    tax_acc = []
+    for line, _ in fasta_iter:
+        sample = line.split()[0].split("_")[0][1:]
+        bc_and_otu = line.split()[5].split("=")[1]
+        tax = line.split()[5].split("=")[2].split(",")
+        bc = bc_and_otu.split(";")[0]
+        otu = bc_and_otu.split(";")[1]
+        otu_acc.append([sample, bc, seq_type, otu])
+        tax_acc.append([otu] + tax)
+    otu = pd.DataFrame(otu_acc)
+    otu.columns = ['Sample', 'Barcode', 'Type', 'OTU']
+    grouped_table = otu.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
+    tax = pd.DataFrame(tax_acc)
+    return [grouped_table, tax] 
 
 def fasta_to_bc_otu_table(fasta_file, output_file=None):
     fasta_list = list(io.read_fasta(fasta_file))
@@ -97,7 +116,7 @@ def get_grouped_table(fasta_table):
     if isinstance(fasta_table, str):
         fasta_table = pd.read_csv(fasta_table)
     grouped_table = fasta_table.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
-    return grouped_table
+    return [grouped_table, []]
 
 
 def get_singletons(grouped_table):
@@ -146,15 +165,12 @@ def unoise_helper(input_fasta, seq_type):
 
 
 def grouper(input_fasta, unoise, seq_type=None):
+    print("Reading in fasta file..")
     if unoise:
-        print("Converting fasta file..")
-        unoise_processed = unoise_helper(input_fasta, seq_type)
-        print("Reading in fasta file..")
-        table = get_grouped_table(unoise_processed)
+        tables = parse_unoise(input_fasta, seq_type)
     else:
-        print("Reading in fasta file..")
-        table = get_grouped_table(fasta_to_bc_otu_table(input_fasta))
-    return table
+        tables = get_grouped_table(fasta_to_bc_otu_table(input_fasta))
+    return tables
 
 def filter_significant_connections(conn, abu):
     conn.columns = [0, 1, 2]
@@ -176,14 +192,14 @@ def filter_significant_connections(conn, abu):
 
 connection_template = '''DATASET_CONNECTION
 SEPARATOR COMMA
-DATASET_LABEL,example connections
+DATASET_LABEL,{}
 COLOR,#ff0ff0
 DRAW_ARROWS,0
 ARROW_SIZE,0
 MAXIMUM_LINE_WIDTH,10
 CURVE_ANGLE,0
 CENTER_CURVES,1
-ALIGN_TO_LABELS,1
+ALIGN_TO_LABELS,0
 DATA
 #NODE1,NODE2,WIDTH,COLOR,LABEL
 '''
@@ -203,12 +219,12 @@ class BarcodeContainer(object):
         self.type_dict = {}
         if input_16S:
             print("Parsing 16S data..")
-            self.type_dict['16S'] = grouper(input_16S, unoise, '16S')
+            self.type_dict['16S'], self.tax = grouper(input_16S, unoise, '16S')
             self.bact_connections = self.__get_connections('16S')
             self.bact_singletons = self.__get_singletons('16S')
         if input_18S:
             print("Parsing 18S data..")
-            self.type_dict['18S'] = grouper(input_18S, unoise, '18S')
+            self.type_dict['18S'], _ = grouper(input_18S, unoise, '18S')
             self.euk_connections = self.__get_connections('18S')
             self.euk_singletons = self.__get_singletons('18S')
         if input_funcs:
@@ -248,7 +264,7 @@ class BarcodeContainer(object):
             file_type = 'tot_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
             print("Writing total connection file {}".format(file_name))
-            self.get_total_itol_connections(seq_type, sample, color="#9aa0a6", out_file=file_name)
+            self.get_total_itol_connections(seq_type, sample, color="#9aa0a6", out_file=file_name, label=sample)
 
             file_type = 'below_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
@@ -276,7 +292,8 @@ class BarcodeContainer(object):
         conns = conns['index'] + "," + conns['Connection'] + "," \
                 + conns['Color'] + "," + conns['Label']
         conns = "\n".join(sorted(list(conns)))
-        conns = connection_template + conns
+        conn_template = connection_template.format(label)
+        conns = conn_template + conns
         if out_file:
             with open(out_file, 'w') as f:
                 f.write(conns)
@@ -333,6 +350,7 @@ class BarcodeContainer(object):
                     sig_abu_conns['Observed'] + "," + sig_abu_conns['Color'] +\
                     "," + sig_abu_conns['Label']
         sig_table = "\n".join(list(sig_table)).strip()
+        connection_template = connection_template.format(label)
         sig_table = connection_template + sig_table
         if out_file:
             with open(out_file, 'w') as f:
@@ -352,6 +370,7 @@ class BarcodeContainer(object):
                     sig_abu_conns['Observed'] + "," + sig_abu_conns['Color'] +\
                     "," + sig_abu_conns['Label']
         sig_table = "\n".join(list(sig_table)).strip()
+        connection_template = connection_template.format(label)
         sig_table = connection_template + sig_table
         if out_file:
             with open(out_file, 'w') as f:
