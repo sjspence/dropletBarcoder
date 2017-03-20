@@ -401,7 +401,7 @@ class BarcodeContainer(object):
         tax_table = tax['Kingdom'] + ";" + tax['Phylum'] + ";" + tax['Order'] + ";" +\
                     tax['Family'] + ";" + tax['Genus'] + ";" + tax['Species']
         tax_name = tax['Genus'].str.split(":").apply(lambda x: x[1]) + " " +\
-                   tax['Species'].str.split(":").apply(lambda x: x[1].split(";")[0])
+                   tax['Species'].str.split(":").apply(lambda x: x[1])
         popup_table = tax['OTU'] + "," + tax_name + "," + tax_table
         popup_str = "\n".join(list(popup_table)).strip()
         popup_str = popup_template + popup_str
