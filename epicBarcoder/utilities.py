@@ -423,8 +423,8 @@ class BarcodeContainer(object):
 
     def __repr__(self):
         gt = self.type_dict['16S']
-        gt[gt.apply(lambda x: len(x) == 1)].reset_index().groupby('Sample').size()
-        gt[gt.apply(lambda x: len(set(x)) > 1)].reset_index().groupby('Sample').size()
+        singletons = gt[gt.apply(lambda x: len(x) == 1)].reset_index().groupby('Sample').size()
+        multiples = gt[gt.apply(lambda x: len(set(x)) > 1)].reset_index().groupby('Sample').size()
         out_table = pd.concat([self.read_count, singletons, multiples], axis=1).rename(columns={0: '#Reads',
                                                                                                 1: '#Singleton BCs',
                                                                                                 2: '#Multiplet BCs'})
