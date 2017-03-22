@@ -131,9 +131,10 @@ def parse_unoise(unoise_file, seq_type):
     otu = pd.DataFrame(otu_acc)
     otu.columns = ['Sample', 'Barcode', 'Type', 'OTU']
     grouped_table = otu.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
+    read_count = otu.groupby('Sample').size()
     tax = pd.DataFrame(tax_acc).drop_duplicates()
     tax.columns = ['OTU', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species']
-    return [grouped_table, tax]
+    return [grouped_table, tax, read_count]
 
 
 def fasta_to_bc_otu_table(fasta_file, output_file=None):
@@ -155,7 +156,8 @@ def get_grouped_table(fasta_table):
     if isinstance(fasta_table, str):
         fasta_table = pd.read_csv(fasta_table)
     grouped_table = fasta_table.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
-    return [grouped_table, []]
+    read_count = fasta_table.groupby('Sample').size()
+    return [grouped_table, [], read_count]
 
 
 def get_singletons(grouped_table):
@@ -202,6 +204,7 @@ def grouper(input_fasta, unoise, seq_type=None):
         tables = get_grouped_table(fasta_to_bc_otu_table(input_fasta))
     return tables
 
+
 def filter_significant_connections(conn, abu):
     conn.columns = [0, 1, 2]
     abu.columns = [0, 1]
@@ -220,6 +223,8 @@ def filter_significant_connections(conn, abu):
     return pairwise_tot
 
 
+
+
 class BarcodeContainer(object):
 
     def __init__(self, input_16S=None, input_18S=None, input_funcs=None, unoise=False):
@@ -227,12 +232,12 @@ class BarcodeContainer(object):
         self.type_dict = {}
         if input_16S:
             print("Parsing 16S data..")
-            self.type_dict['16S'], self.tax = grouper(input_16S, unoise, '16S')
+            self.type_dict['16S'], self.tax, self.read_count = grouper(input_16S, unoise, '16S')
             self.bact_connections = self.__get_connections('16S')
             self.bact_singletons = self.__get_singletons('16S')
         if input_18S:
             print("Parsing 18S data..")
-            self.type_dict['18S'], _ = grouper(input_18S, unoise, '18S')
+            self.type_dict['18S'], _, self.read_count = grouper(input_18S, unoise, '18S')
             self.euk_connections = self.__get_connections('18S')
             self.euk_singletons = self.__get_singletons('18S')
         if input_funcs:
@@ -277,22 +282,26 @@ class BarcodeContainer(object):
             file_type = 'abunds'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
             print("Writing abundance file {}".format(file_name))
-            self.get_itol_abunds(seq_type, sample, color="#ff0000", out_file=file_name, label=sample + "_abund")
+            self.get_itol_abunds(seq_type, sample, color="#ff0000", out_file=file_name,
+                                 label=sample + "_abund")
 
             file_type = 'tot_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
             print("Writing total connection file {}".format(file_name))
-            self.get_total_itol_connections(seq_type, sample, color="#9aa0a6", out_file=file_name, label=sample + "_tot")
+            self.get_total_itol_connections(seq_type, sample, color="#9aa0a6", out_file=file_name,
+                                            label=sample + "_tot")
 
             file_type = 'below_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
             print("Writing lower connection file {}".format(file_name))
-            self.get_itol_sig_below_connections(seq_type, sample, color="#0000ff", out_file=file_name, label=sample + "_below")
+            self.get_itol_sig_below_connections(seq_type, sample, color="#0000ff",
+                                                out_file=file_name, label=sample + "_below")
 
             file_type = 'above_connections'
             file_name = "{}_{}_{}.txt".format(sample, seq_type, file_type)
             print("Writing elevated connection file {}".format(file_name))
-            self.get_itol_sig_above_connections(seq_type, sample, color="#ff0000", out_file=file_name, label=sample + "_above")
+            self.get_itol_sig_above_connections(seq_type, sample, color="#ff0000",
+                                                out_file=file_name, label=sample + "_above")
 
     def get_total_itol_connections(self, seq_type, sample, out_file=None,
                                    color='#9AA0A6', label='Label'):
@@ -400,6 +409,7 @@ class BarcodeContainer(object):
         tax = self.tax
         tax_table = tax['Kingdom'] + ";" + tax['Phylum'] + ";" + tax['Order'] + ";" +\
                     tax['Family'] + ";" + tax['Genus'] + ";" + tax['Species']
+        tax[tax.isnull()] = "Unknown:Unknown"
         tax_name = tax['Genus'].str.split(":").apply(lambda x: x[1]) + " " +\
                    tax['Species'].str.split(":").apply(lambda x: x[1])
         popup_table = tax['OTU'] + "," + tax_name + "," + tax_table
@@ -410,6 +420,15 @@ class BarcodeContainer(object):
                 f.write(popup_str)
         else:
             return popup_str
+
+    def __repr__(self):
+        gt = self.type_dict['16S']
+        gt[gt.apply(lambda x: len(x) == 1)].reset_index().groupby('Sample').size()
+        gt[gt.apply(lambda x: len(set(x)) > 1)].reset_index().groupby('Sample').size()
+        out_table = pd.concat([singletons, multiples], axis=1).rename(columns={0: '#Singleton BCs',
+                                                                               1: '#Multiplet BCs'})
+        out_str = out_table.to_string()
+        return out_str
 
 
 def process_mapping_file(mapping_file):
