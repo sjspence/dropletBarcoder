@@ -70,7 +70,7 @@ class TestUtilities(unittest.TestCase):
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table, _ = utilities.get_grouped_table(processed_table)
+        grouped_table, _, _ = utilities.get_grouped_table(processed_table)
         items = list(grouped_table)
         self.assertEqual(items[0], ['Otu2'])
         self.assertEqual(set(items[2]), {'Otu1', 'Otu2'})
@@ -83,7 +83,7 @@ class TestUtilities(unittest.TestCase):
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table, _ = utilities.get_grouped_table(processed_table)
+        grouped_table, _, _ = utilities.get_grouped_table(processed_table)
         singletons = utilities.get_singletons(grouped_table)
         singleton_list = sorted(list(singletons['OTU']))
         self.assertEqual(singleton_list, ['Otu1', 'Otu1', 'Otu2'])
@@ -93,7 +93,7 @@ class TestUtilities(unittest.TestCase):
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table, _ = utilities.get_grouped_table(processed_table)
+        grouped_table, _, _ = utilities.get_grouped_table(processed_table)
         connections = utilities.get_connections(grouped_table)
         self.assertEqual(list(connections['OTU']), [['Otu1', 'Otu2'],
                                                     ['Otu4', 'Otu5', 'Otu6']])
@@ -104,7 +104,7 @@ class TestUtilities(unittest.TestCase):
         io.write_fasta(processed_fasta_list, "processed.fasta")
         processed_table = utilities.fasta_to_bc_otu_table("processed.fasta")
         os.remove("processed.fasta")
-        grouped_table, _ = utilities.get_grouped_table(processed_table)
+        grouped_table, _, _ = utilities.get_grouped_table(processed_table)
         connections = utilities.get_connections(grouped_table)
         obs_conns = utilities.expand_connections(connections)
         exp_conns = [['OM8s16', 'Otu1,Otu2'],
@@ -160,7 +160,7 @@ class TestUtilities(unittest.TestCase):
     def test_BarcodeContainer_get_itol_popup(self):
         container = utilities.BarcodeContainer(input_16S="test_tax.fasta", unoise=True)
         popup_table = container.get_popup_for_itol()
-        self.assertEqual(popup_table.split("\n")[10].split(",")[0], 'Otu3')
+        self.assertEqual(popup_table.split("\n")[10].split(",")[0], 'Otu5')
         # print(container.tax)
 
 
