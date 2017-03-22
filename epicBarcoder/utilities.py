@@ -425,8 +425,9 @@ class BarcodeContainer(object):
         gt = self.type_dict['16S']
         gt[gt.apply(lambda x: len(x) == 1)].reset_index().groupby('Sample').size()
         gt[gt.apply(lambda x: len(set(x)) > 1)].reset_index().groupby('Sample').size()
-        out_table = pd.concat([singletons, multiples], axis=1).rename(columns={0: '#Singleton BCs',
-                                                                               1: '#Multiplet BCs'})
+        out_table = pd.concat([self.read_count, singletons, multiples], axis=1).rename(columns={0: '#Reads',
+                                                                                                1: '#Singleton BCs',
+                                                                                                2: '#Multiplet BCs'})
         out_str = out_table.to_string()
         return out_str
 
