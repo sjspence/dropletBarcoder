@@ -51,7 +51,7 @@ def importFasta(inputFileName):
     for line in inputFile:
         if '>' in line:
             if currentDNA != '':
-                readObj = fastaSeq(currentHeader, currentDNA, currentSeq,
+                readObj = FastaSeq(currentHeader, currentDNA, currentSeq,
 					currentCluster)
                 reads.append(readObj)
             currentHeader, currentSeq, currentCluster = getHeaderParams(line)
@@ -59,7 +59,7 @@ def importFasta(inputFileName):
         else:
             currentDNA += line.strip()
     if currentDNA != '':
-        readObj = fastaSeq(currentHeader, currentDNA, currentSeq,
+        readObj = FastaSeq(currentHeader, currentDNA, currentSeq,
 				currentCluster)
         reads.append(readObj)
     inputFile.close()
@@ -84,7 +84,7 @@ def removeFwdRevPrimer(reads, fwd, rev):
         else:
             continue
         splitSeqRev = re.split(reverse,fwdRemoved)
-        newRead = fastaSeq(read.header, splitSeqRev[0], read.seq_id, 
+        newRead = FastaSeq(read.header, splitSeqRev[0], read.seq_id, 
                                 read.cluster)
         usableReads.append(newRead)
     return usableReads
@@ -100,7 +100,7 @@ def removeFwdPrimer(reads, fwd):
         splitSeq = re.split(primer, read.seq)
         if len(splitSeq[1]) == 0:
             continue
-        newRead = fastaSeq(read.header, splitSeq[1], read.seq_id,
+        newRead = FastaSeq(read.header, splitSeq[1], read.seq_id,
                                 read.cluster)
         usableReads.append(newRead)
     return usableReads
@@ -122,7 +122,7 @@ def filtBarcodePrimers(reads, bcLength, fwd, rev):
         fwdRemoved = re.split(forward, read.seq)[1]
         splitSeqRev = re.split(reverse, fwdRemoved)[0]
         newHeader = read.header + ' droplet_bc=' + read.seq[0:bcLength]
-        newRead = fastaSeq(newHeader, splitSeqRev, read.seq_id,
+        newRead = FastaSeq(newHeader, splitSeqRev, read.seq_id,
                                 read.cluster)
         usableReads.append(newRead)
     return usableReads
@@ -139,7 +139,7 @@ def trimLength(reads, outputLength):
     for read in reads:
         if len(read.seq) >= outputLength:
             newSeq = read.seq[0:outputLength]
-            newRead = fastaSeq(read.header, newSeq, read.seq_id,
+            newRead = FastaSeq(read.header, newSeq, read.seq_id,
                                 read.cluster)
             returnReads.append(newRead)
     return returnReads
@@ -165,7 +165,7 @@ def removeSamples(sampList, reads):
             outReads.append(r)
     return outReads
 
-class fastaSeq(object):
+class FastaSeq(object):
     #def __init__(self, seq_name=None, cluster=None, header, seq):
     def __init__(self, header, seq, seq_id=None, cluster=None):
         self.header = header
