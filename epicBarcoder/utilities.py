@@ -120,7 +120,7 @@ def parse_unoise(unoise_file, seq_type):
     fasta_iter = io.read_fasta(unoise_file)
     otu_acc = []
     tax_acc = []
-    for line, _ in fasta_iter:
+    for ix, (line, _) in enumerate(fasta_iter):
         sample = line.split()[0].split("_")[0][1:]
         bc_and_otu = line.split()[5].split("=")[1]
         tax = line.split()[5].split("=")[2].split(",")
@@ -128,6 +128,8 @@ def parse_unoise(unoise_file, seq_type):
         otu = bc_and_otu.split(";")[1]
         otu_acc.append([sample, bc, seq_type, otu])
         tax_acc.append([otu] + tax)
+        print("Parsing entry {}".format(ix), end="\r")
+    print("Parsed {} entries".format(ix))
     non_grouped = pd.DataFrame(otu_acc)
     non_grouped.columns = ['Sample', 'Barcode', 'Type', 'OTU']
     grouped_table = non_grouped.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
