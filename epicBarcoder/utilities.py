@@ -197,7 +197,9 @@ def expand_connections(connections):
         acc.append(new_frame)
         if ix % 1000 == 0:
             print("Parsing entry {} of {}..".format(ix, conn_len), end="\r")
+    print()
     print("Parsed {} entries".format(ix))
+    print("Joining the parsed entries..")
     expanded = pd.concat(acc)
     expanded['Connection'] = expanded[0] + "," + expanded[1]
     expanded = expanded.loc[:, ['Sample', 'Connection']]
