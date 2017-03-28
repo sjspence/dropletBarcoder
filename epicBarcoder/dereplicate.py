@@ -27,7 +27,8 @@ def otuToHeaders(otuReads, taxInfo, unique, outFileName):
     for otu in otuReads:
         for read in unique[otu.seq]:
             otuID = otu.header.replace('>','').split(';')[0]
-            finalTax = taxInfo[otu.header.replace('>','')][1]
+	    otuTax = otu.header.replace('>','').split(' ')[0]
+            finalTax = taxInfo[otuTax][1]
             newHeader = read.header + ';' + otuID + ';tax=' + finalTax + ';'
             outFile.write(newHeader + '\n')
             outFile.write(read.seq + '\n')
