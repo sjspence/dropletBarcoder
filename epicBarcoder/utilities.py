@@ -242,8 +242,8 @@ class BarcodeContainer(object):
         if input_16S:
             print("Parsing 16S data..")
             self.type_dict['16S'], self.tax, self.read_count, self.bact_non_grouped = grouper(input_16S, unoise, '16S')
-            self.bact_connections = self.__get_connections('16S')
             self.bact_singletons = self.__get_singletons('16S')
+            self.bact_connections = self.__get_connections('16S')
         if input_18S:
             print("Parsing 18S data..")
             self.type_dict['18S'], _, self.read_count, self.euk_non_grouped = grouper(input_18S, unoise, '18S')
