@@ -129,10 +129,11 @@ def parse_unoise(unoise_file, seq_type):
         otu_acc.append([sample, bc, seq_type, otu])
         tax_acc.append([otu] + tax)
         if ix % 1000 == 0:
-            print("Parsing entry {}".format(ix), end="\r")
-    print("Parsed {} entries".format(ix))
+            print("Parsing fasta entry {}..".format(ix), end="\r")
+    print("Parsed {} fasta entries.".format(ix))
     non_grouped = pd.DataFrame(otu_acc)
     non_grouped.columns = ['Sample', 'Barcode', 'Type', 'OTU']
+    print("Grouping the data..")
     grouped_table = non_grouped.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
     read_count = non_grouped.groupby('Sample').size()
     tax = pd.DataFrame(tax_acc).drop_duplicates()
@@ -183,8 +184,9 @@ def get_connections(grouped_table):
 
 def expand_connections(connections):
     acc = []
+    conn_len = length(connections)
     connections['OTU'] = connections['OTU'].apply(lambda x: combinations(x, 2))
-    for row in connections.iterrows():
+    for ix, row in enumerate(connections.iterrows()):
         sample = row[1]['Sample']
         bc = row[1]['Barcode']
         otu_type = row[1]['Type']
@@ -193,6 +195,9 @@ def expand_connections(connections):
         new_frame['Barcode'] = bc
         new_frame['Type'] = otu_type
         acc.append(new_frame)
+        if ix % 1000 == 0:
+            print("Parsing entry {} of {}..".format(ix, conn_len), end="\r")
+    print("Parsed {} entries".format(ix))
     expanded = pd.concat(acc)
     expanded['Connection'] = expanded[0] + "," + expanded[1]
     expanded = expanded.loc[:, ['Sample', 'Connection']]
@@ -227,8 +232,6 @@ def filter_significant_connections(conn, abu):
     return pairwise_tot
 
 
-
-
 class BarcodeContainer(object):
 
     def __init__(self, input_16S=None, input_18S=None, input_funcs=None, unoise=False):
@@ -255,9 +258,6 @@ class BarcodeContainer(object):
         pickle_name = input_16S.split(".")[0] + ".pickle"
         with open(pickle_name, "wb") as f:
             pickle.dump(self, f)
-
-        # print("Writing out bacterial iTOL files..")
-        # self.write_itol_files('16S')
 
     def __get_singletons(self, seq_type):
         print("Extracting singletons..")
@@ -424,6 +424,26 @@ class BarcodeContainer(object):
                 f.write(popup_str)
         else:
             return popup_str
+
+
+    def get_bc_otu_matrix(self, sample_id):
+        tbl = self.type_dict['16S']
+        b = tbl[sample_id]
+        c = b.reset_index('Type', drop=True)
+        acc = []
+        print("Expanding OTU lists")
+        for iix, (ix, lst) in enumerate(c.iteritems()):
+            counts = pd.Series(lst).value_counts().reset_index()
+            counts['BC'] = ix
+            acc.append(counts)
+            if iix % 1000 == 0:
+                print("Processing entry {}".format(iix), sep=" ", end="\r", flush=True)
+        print("Processed {} entries".format(iix))
+        print("Merging the expanded tables")
+        tmp = pd.concat(acc)
+        tmp.columns = ['variable', 'value', 'X']
+        return tmp
+    
 
     def __repr__(self):
         gt = self.type_dict['16S']
