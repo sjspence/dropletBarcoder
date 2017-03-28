@@ -128,7 +128,8 @@ def parse_unoise(unoise_file, seq_type):
         otu = bc_and_otu.split(";")[1]
         otu_acc.append([sample, bc, seq_type, otu])
         tax_acc.append([otu] + tax)
-        print("Parsing entry {}".format(ix), end="\r")
+        if ix % 1000 == 0:
+            print("Parsing entry {}".format(ix), end="\r")
     print("Parsed {} entries".format(ix))
     non_grouped = pd.DataFrame(otu_acc)
     non_grouped.columns = ['Sample', 'Barcode', 'Type', 'OTU']
