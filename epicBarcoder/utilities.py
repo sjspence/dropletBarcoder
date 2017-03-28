@@ -128,13 +128,14 @@ def parse_unoise(unoise_file, seq_type):
         otu = bc_and_otu.split(";")[1]
         otu_acc.append([sample, bc, seq_type, otu])
         tax_acc.append([otu] + tax)
-    otu = pd.DataFrame(otu_acc)
-    otu.columns = ['Sample', 'Barcode', 'Type', 'OTU']
-    grouped_table = otu.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
-    read_count = otu.groupby('Sample').size()
+    non_grouped = pd.DataFrame(otu_acc)
+    non_grouped.columns = ['Sample', 'Barcode', 'Type', 'OTU']
+    grouped_table = non_grouped.groupby(['Sample', 'Barcode', 'Type'])['OTU'].apply(list)
+    read_count = non_grouped.groupby('Sample').size()
     tax = pd.DataFrame(tax_acc).drop_duplicates()
-    tax.columns = ['OTU', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species']
-    return [grouped_table, tax, read_count]
+    tax.columns = ['OTU', 'Kingdom', 'Phylum', 'Class', 'Order',
+                   'Family', 'Genus', 'Species']
+    return [grouped_table, tax, read_count, non_grouped]
 
 
 def fasta_to_bc_otu_table(fasta_file, output_file=None):
@@ -232,12 +233,12 @@ class BarcodeContainer(object):
         self.type_dict = {}
         if input_16S:
             print("Parsing 16S data..")
-            self.type_dict['16S'], self.tax, self.read_count = grouper(input_16S, unoise, '16S')
+            self.type_dict['16S'], self.tax, self.read_count, self.bact_non_grouped = grouper(input_16S, unoise, '16S')
             self.bact_connections = self.__get_connections('16S')
             self.bact_singletons = self.__get_singletons('16S')
         if input_18S:
             print("Parsing 18S data..")
-            self.type_dict['18S'], _, self.read_count = grouper(input_18S, unoise, '18S')
+            self.type_dict['18S'], _, self.read_count, self.euk_non_grouped = grouper(input_18S, unoise, '18S')
             self.euk_connections = self.__get_connections('18S')
             self.euk_singletons = self.__get_singletons('18S')
         if input_funcs:
