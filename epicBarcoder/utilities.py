@@ -184,7 +184,7 @@ def get_connections(grouped_table):
 
 def expand_connections(connections):
     acc = []
-    conn_len = length(connections)
+    conn_len = len(connections)
     connections['OTU'] = connections['OTU'].apply(lambda x: combinations(x, 2))
     for ix, row in enumerate(connections.iterrows()):
         sample = row[1]['Sample']
