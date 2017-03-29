@@ -26,20 +26,18 @@ def getUniqueSeqs(noPrimerFile, outFasta):
     outFile.close()
     return uniqueSeqs
 
-#Translate unoise2 output and SINTAX output into headers of original reads
-#Input: reads imported from denoised otus
-#	taxonomic dictionary imported from sintax output
-#	unique dictionary created by getUniqueSeqs
-#Output: a file is written with primer-filtered reads, plus otu and tax
-#	information in their headers
-def otuToHeaders(otuReads, taxInfo, unique, outFileName):
+#Translate unoise2 output into headers of original reads
+#INPUT:  unique dictionary created by getUniqueSeqs
+#        reads imported from denoised otus
+#OUTPUT: a file is written with all primer-filtered, denoised reads, plus otu
+#	 information in their headers
+def expandDenoised(uniqueDict, denoisedFile, outFileName):
+    denoised = rd.importFasta(denoisedFile)
     outFile = open(outFileName, 'w')
-    for otu in otuReads:
-        for read in unique[otu.seq]:
+    for otu in denoised:
+        for read in uniqueDict[otu.seq]:
             otuID = otu.header.replace('>','').split(';')[0]
-	    otuTax = otu.header.replace('>','').split(' ')[0]
-            finalTax = taxInfo[otuTax][1]
-            newHeader = read.header + ';' + otuID + ';tax=' + finalTax + ';'
+            newHeader = read.header + ';' + otuID + ';'
             outFile.write(newHeader + '\n')
             outFile.write(read.seq + '\n')
     outFile.close()
