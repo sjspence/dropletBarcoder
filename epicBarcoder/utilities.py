@@ -507,7 +507,7 @@ def make_otus_and_assign(input_file, db_dir, usearchPath):
     noPrimerReads = reads.importFasta(input_file)
     uniqueDict = dereplicate.getUniqueSeqs(noPrimerReads, '05_unique_seqs.fasta')
     subprocess.call([usearchPath, '-unoise2', '05_unique_seqs.fasta', '-fastaout', '06_denoised.fa',
-                    '-otudbout', '06_db.fa', '-minampsize', '1'], env=env)
+                    '-otudbout', '06_db.fa', '-minampsize', '3'], env=env)
     outFile = open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.51.p9_sintax.fasta', 'w')
     taxDict = {}
     with open(db_dir + 'HOMD_16S_rRNA_RefSeq_V14.5.qiime_spike.taxonomy', 'r') as t:
