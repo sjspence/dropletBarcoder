@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 
-def getUniqueSeqs(inReads, outFasta):
+import reads as rd
+
+#Collapse identical reads into representative sequences to reduce the file
+#size for usearch
+#INPUT:  noPrimerFile is the clean 16S output of upstream primer filtering
+#        outFasta is the output file where unique seqs are written along with
+#            size designations for the number of identical reads
+#OUTPUT: Dictionary mapping unique DNA sequence to a list of read objects that
+#            contain it (from the input primer-filtered 16S file)
+def getUniqueSeqs(noPrimerFile, outFasta):
+    inReads = rd.importFasta(noPrimerFile)
     uniqueSeqs = {}
     uniqueReads = []
     outFile = open(outFasta, 'w')
