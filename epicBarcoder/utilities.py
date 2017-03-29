@@ -445,15 +445,21 @@ class BarcodeContainer(object):
         tmp = pd.concat(acc)
         tmp.columns = ['variable', 'value', 'X']
         return tmp
-    
+
 
     def __repr__(self):
         gt = self.type_dict['16S']
         singletons = gt[gt.apply(lambda x: len(x) == 1)].reset_index().groupby('Sample').size()
         multiples = gt[gt.apply(lambda x: len(set(x)) > 1)].reset_index().groupby('Sample').size()
-        out_table = pd.concat([self.read_count, singletons, multiples], axis=1).rename(columns={0: '#Reads',
-                                                                                                1: '#Singleton BCs',
-                                                                                                2: '#Multiplet BCs'})
+        barcodes = gt.reset_index().groupby('Sample').size()
+        out_table = pd.concat([self.read_count,
+                               barcodes,
+                               singletons,
+                               multiples],
+                              axis=1).rename(columns={0: '#Reads',
+                                                      1: '#Barcodes',
+                                                      2: '#Singleton BCs',
+                                                      3: '#Multiplet BCs'})
         out_str = out_table.to_string()
         return out_str
 
