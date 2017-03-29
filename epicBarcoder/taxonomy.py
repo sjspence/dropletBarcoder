@@ -2,10 +2,12 @@
 # 3/27/2017 Sarah J. Spencer, Alm Lab
 
 #Import SINTAX taxonomy
-#Input: usearch SINTAX taxonomy file name
-#Output: python dictionary mapping otu ID to 
-#        list [taxonomy probabilities, final taxonomy]
-def importSintax(inFileName):
+#INPUT:  usearch SINTAX taxonomy file name
+#	 'full' or 'final', see below
+#OUTPUT: python dictionary mapping otu ID to 
+#        'full': list [taxonomy probabilities, final taxonomy]
+#	 'final': string with >80% taxonomic assignments
+def importSintax(inFileName, completeness):
     taxDict = {}
     inFile = open(inFileName, 'r')
     for line in inFile:
@@ -13,7 +15,10 @@ def importSintax(inFileName):
         otuID = line[0].split(' ')[0]
         taxProbs = line[1]
         tax = line[3]
-        taxDict[otuID] = [taxProbs, tax]
+	if completeness == 'full':
+            taxDict[otuID] = [taxProbs, tax]
+	elif completeness == 'final':
+	    taxDict[otuID] = tax
     inFile.close()
     return taxDict
 

@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 
-#Within each sample, group by barcode; quantify unique barcode pairings
-#Input: Fasta file with droplet barcode, otu, and taxonomic information in the header
-#Output: A dictionary where each sampID maps to a dictionary of droplet barcodes:[zOTU1, zOTU2]
-#        A dictionary where each zOTU maps to a >80% taxonomy
+#Within each sample, group by barcode; assign each barcode a list of zOTUs
+#for each read that contains that barcode (i.e. list can contain redundancies)
+#INPUT:  Fasta file with droplet barcode and zOTU information in the header
+#OUTPUT: A dictionary where each sampID maps to a dictionary of droplet 
+#	 barcodes:[zOTU1, zOTU1, zOTU2, ...]
 def createBarcodeDict(inFileName):
     inFile = open(inFileName, 'r')
     barcodeSamples = {}
-    taxDict = {}
     for line in inFile:
         if '>' in line:
             line = line.strip().split(';')
             samp = line[0].split('_')[0].replace('>','')
             bc = line[0].split('droplet_bc=')[1]
             otu = line[1]
-            tax = line[2].replace('tax=','')
             if samp not in barcodeSamples:
                 barcodeSamples[samp] = {bc:[otu]}
             else:
@@ -22,7 +21,5 @@ def createBarcodeDict(inFileName):
                     barcodeSamples[samp][bc] = [otu]
                 else:
                     barcodeSamples[samp][bc].append(otu)
-            if otu not in taxDict:
-                taxDict[otu] = tax
     inFile.close()
-    return barcodeSamples, taxDict
+    return barcodeSamples
