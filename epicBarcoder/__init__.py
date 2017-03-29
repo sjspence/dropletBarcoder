@@ -14,5 +14,5 @@ from .barcodes import createBarcodeDict
 from .otuTables import buildOTUtable, invertHits
 from .itol import itolHeatmap
 from .trees import makeTreeConstraint, alignmentToSequence
-from .dereplicate import getUniqueSeqs, uniqueSeqsToOTU, otuToHeaders
+from .dereplicate import getUniqueSeqs, expandDenoised, uniqueSeqsToOTU
 from .parallel import run_array_job, run_batch_job
