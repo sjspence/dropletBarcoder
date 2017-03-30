@@ -1,11 +1,6 @@
-import pandas as pd
+#!/usr/bin/env python
 
-def exportFasta(reads, outFileName):
-    outFile = open(outFileName, 'w')
-    for read in reads:
-        outFile.write(read.header + '\n')
-        outFile.write(read.seq + '\n')
-    outFile.close()
+import pandas as pd
 
 def exportPairedFasta(pairedReads, outFileName, outFileNameN):
     outFile = open(outFileName, 'w')

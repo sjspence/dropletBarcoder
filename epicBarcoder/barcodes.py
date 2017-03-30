@@ -2,6 +2,7 @@
 
 import pandas as pd
 from itertools import combinations
+import taxonomy as tx
 
 #Within each sample, group by barcode; assign each barcode a list of zOTUs
 #for each read that contains that barcode (i.e. list can contain redundancies)
@@ -55,31 +56,6 @@ def summarizeBarcoding(barcodeDict, sampIDs, outFileName):
         outFile.write('\t'.join(outList) + '\n')
     outFile.close()
 
-#Take in a dictionary of zOTU:taxonomy, then construct a dataframe that
-#groups zOTUs by those that share taxonomy (i.e. tOTUs)
-#INPUT:  taxonomic dictionary, output of importSintax()
-#OUTPUT: pandas dataframe with zOTU indexes, and two columns with unique tOTU
-#        ID and full taxonomic string
-def tOTUmap(taxDict):
-    index = []
-    tax_tOTU = {}
-    data = []
-    i = 1
-    for zOTU in taxDict:
-        index.append(zOTU)
-        tax = taxDict[zOTU]
-        if tax not in tax_tOTU:
-            tOTU = 'tOtu' + str(i)
-            tax_tOTU[tax] = tOTU
-            taxList = [tOTU, tax]
-            i += 1
-        else:
-            taxList = [tax_tOTU[tax], tax]
-        data.append(taxList)
-    columns = ['tOTU', 'taxonomy']
-    otuDf = pd.DataFrame(data, index=index, columns=columns)
-    return otuDf
-
 #Calculate abundances of background OTUs based on singleton barcodes
 #Background OTUs defined as unique taxonomic classifications
 #INPUT:  barcode dictionary (output of createBarcodeDict)
@@ -87,7 +63,7 @@ def tOTUmap(taxDict):
 #OUTPUT: relative abundance pandas dataframe, with sample IDs in the columns and
 #        tOTUs as row indexes
 def tOTU_singletonAbundances(barcodeDict, taxDict):
-    otuDf = tOTUmap(taxDict)
+    otuDf = tx.tOTUmap(taxDict)
     abundances = {}
     totals = {}
     for s in barcodeDict:
@@ -124,7 +100,7 @@ def tOTU_singletonAbundances(barcodeDict, taxDict):
 #	     rows, sample IDs in the columns, and the number of droplet barcodes
 #	     supporting the pair as data
 def tOTU_quantifyPairs(barcodeDict, taxDict):
-    otuDf = tOTUmap(taxDict)
+    otuDf = tx.tOTUmap(taxDict)
     pairDict = {}
     for s in barcodeDict:
         pairs = {}

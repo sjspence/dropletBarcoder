@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from optparse import OptionParser
 import re
 
@@ -64,6 +66,13 @@ def importFasta(inputFileName):
         reads.append(readObj)
     inputFile.close()
     return reads
+
+def exportFasta(reads, outFileName):
+    outFile = open(outFileName, 'w')
+    for read in reads:
+        outFile.write(read.header + '\n')
+        outFile.write(read.seq + '\n')
+    outFile.close()
 
 # Parse the joined fasta reads for designed primer sequence structure
 # Output: sequences that match the designed structure

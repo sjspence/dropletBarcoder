@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # 3/27/2017 Sarah J. Spencer, Alm Lab
 
+import pandas as pd
+
 #Import SINTAX taxonomy
 #INPUT:  usearch SINTAX taxonomy file name
 #	 'full' or 'final', see below
@@ -21,6 +23,31 @@ def importSintax(inFileName, completeness):
 	    taxDict[otuID] = tax
     inFile.close()
     return taxDict
+
+#Take in a dictionary of zOTU:taxonomy, then construct a dataframe that
+#groups zOTUs by those that share taxonomy (i.e. tOTUs)
+#INPUT:  taxonomic dictionary, output of importSintax()
+#OUTPUT: pandas dataframe with zOTU indexes, and two columns with unique tOTU
+#        ID and full taxonomic string
+def tOTUmap(taxDict):
+    index = []
+    tax_tOTU = {}
+    data = []
+    i = 1
+    for zOTU in taxDict:
+        index.append(zOTU)
+        tax = taxDict[zOTU]
+        if tax not in tax_tOTU:
+            tOTU = 'tOtu' + str(i)
+            tax_tOTU[tax] = tOTU
+            taxList = [tOTU, tax]
+            i += 1
+        else:
+            taxList = [tax_tOTU[tax], tax]
+        data.append(taxList)
+    columns = ['tOTU', 'taxonomy']
+    otuDf = pd.DataFrame(data, index=index, columns=columns)
+    return otuDf
 
 #Import mothur taxonomy file
 #Input: taxonomy file name

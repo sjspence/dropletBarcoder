@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+
+import reads as rd
+import taxonomy as tx
+
 def makeTreeConstraint(inFileName, outFileName):
     inFile = open(inFileName, 'r')
     taxAssignments = []
@@ -52,3 +57,34 @@ def alignmentToSequence(inFileName, outFileName):
     outFile.write(header + sequence)
     inFile.close()
     outFile.close()
+
+#Choose representative sequence based on abundance in taxonomic group, export fasta of representative seqs
+#INPUT:  usearch denoised fasta file of biological sequences
+#        usearch sintax file of taxonomic assignments
+#        file path to write representative sequences to
+#OUTPUT: representative tOTU sequences written to specified file
+def tOTU_pickRepSeqs(denoisedFile, sintaxFile, outFile):
+    denoised = rd.importFasta(denoisedFile)        #REMOVE EBS IN NEXT THREE LINES
+    taxDict = tx.importSintax(sintaxFile, 'final')
+    otuDf = tx.tOTUmap(taxDict) 
+    taxSeqs = {}
+    for read in denoised:
+        counts = int(read.header.split('size=')[1].replace(';',''))
+        zOTU = read.seq_id.split(';')[0]
+        tOTU = otuDf['tOTU'][zOTU]
+        if tOTU not in taxSeqs:
+            taxSeqs[tOTU] = [[read, counts]]
+        else:
+            taxSeqs[tOTU].append([read, counts])
+    outReads = []
+    for t in taxSeqs:
+        maxCt = 0
+        maxRead = ''
+        for i in taxSeqs[t]:
+            if i[1] > maxCt:
+                maxCt = i[1]
+                maxRead = i[0]
+        #Edit header to include tOTU designation
+        maxRead.header = maxRead.header.replace('>', '>' + t + ' ')
+        outReads.append(maxRead)
+    rd.exportFasta(outReads, outFile)
