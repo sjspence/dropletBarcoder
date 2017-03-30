@@ -11,7 +11,7 @@ from .utilities import clusterWithUsearch, filter_significant_connections, \
 from .usearch_io import importClusterFast
 from .taxonomy import importSintax, importTaxonomy
 from .barcodes import createBarcodeDict, summarizeBarcoding
-from .otuTables import buildOTUtable, invertHits
+from .otuTables import tOTUmap, buildOTUtable, invertHits
 from .itol import itolHeatmap
 from .trees import makeTreeConstraint, alignmentToSequence
 from .dereplicate import getUniqueSeqs, expandDenoised, uniqueSeqsToOTU
