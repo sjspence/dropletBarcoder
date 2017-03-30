@@ -125,9 +125,7 @@ def tOTU_singletonAbundances(barcodeDict, taxDict):
 def tOTU_quantifyPairs(barcodeDict, taxDict):
     otuDf = tOTUmap(taxDict)
     pairDict = {}
-    for s in sampIDs:
-        if s not in barcodeDict:
-            continue
+    for s in barcodeDict:
         pairs = {}
         for bc in barcodeDict[s]:
             otuList = barcodeDict[s][bc]
@@ -149,6 +147,3 @@ def tOTU_quantifyPairs(barcodeDict, taxDict):
         pairDict[s] = pairs
     pairDf = pd.DataFrame.from_dict(pairDict)
     return pairDf
-
-
-
