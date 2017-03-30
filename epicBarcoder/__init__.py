@@ -10,8 +10,9 @@ from .utilities import clusterWithUsearch, filter_significant_connections, \
 #       move_barcodes_and_type_to_fasta_id
 from .usearch_io import importClusterFast
 from .taxonomy import importSintax, importTaxonomy
-from .barcodes import createBarcodeDict, summarizeBarcoding
-from .otuTables import tOTUmap, buildOTUtable, invertHits
+from .barcodes import createBarcodeDict, summarizeBarcoding, tOTUmap, \
+	tOTU_singletonAbundances
+from .otuTables import buildOTUtable, invertHits
 from .itol import itolHeatmap
 from .trees import makeTreeConstraint, alignmentToSequence
 from .dereplicate import getUniqueSeqs, expandDenoised, uniqueSeqsToOTU
