@@ -114,3 +114,41 @@ def tOTU_singletonAbundances(barcodeDict, taxDict):
         relAbundances[s] = relAbund
     relDf = pd.DataFrame.from_dict(relAbundances)
     return relDf
+
+#Create a dataframe mapping each unique taxonomy-otu (tOTU) pair to the number
+#of barcodes supporting it
+#INPUT:  barcode dictionary (output of createBarcodeDict)
+#        taxonomic dictionary (output of importSintax with 'final' setting)
+#OUTPUT: a dataframe with tOTU pairs separated by a double underscore in the
+#	     rows, sample IDs in the columns, and the number of droplet barcodes
+#	     supporting the pair as data
+def tOTU_quantifyPairs(barcodeDict, taxDict):
+    otuDf = tOTUmap(taxDict)
+    pairDict = {}
+    for s in sampIDs:
+        if s not in barcodeDict:
+            continue
+        pairs = {}
+        for bc in barcodeDict[s]:
+            otuList = barcodeDict[s][bc]
+            if len(otuList) > 1:
+                uniqueOTUs = list(set(otuList))
+                if len(uniqueOTUs) > 1:
+                    tOTUs = []
+                    for zOTU in uniqueOTUs:
+                        tOTUs.append(otuDf['tOTU'][zOTU])
+                    unique_tOTUs = list(set(tOTUs))
+                    if len(unique_tOTUs) > 1:
+                        pairList = ['__'.join(list(comb)) for comb in \
+				    combinations(unique_tOTUs, 2)]
+                        for p in pairList:
+                            if p not in pairs:
+                                pairs[p] = 1
+                            else:
+                                pairs[p] += 1
+        pairDict[s] = pairs
+    pairDf = pd.DataFrame.from_dict(pairDict)
+    return pairDf
+
+
+
