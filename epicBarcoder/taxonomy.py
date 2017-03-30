@@ -12,7 +12,7 @@ def importSintax(inFileName, completeness):
     inFile = open(inFileName, 'r')
     for line in inFile:
         line = line.strip().split('\t')
-        otuID = line[0].split(' ')[0]
+        otuID = line[0].split(' ')[0].split(';')[0]
         taxProbs = line[1]
         tax = line[3]
 	if completeness == 'full':

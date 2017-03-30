@@ -3,6 +3,31 @@
 
 import pandas as pd
 
+#Take in a dictionary of zOTU:taxonomy, then construct a dataframe that
+#groups zOTUs by those that share taxonomy (i.e. tOTUs)
+#INPUT:  taxonomic dictionary, output of importSintax()
+#OUTPUT: pandas dataframe with zOTU indexes, and two columns with unique tOTU
+#	 ID and full taxonomic string
+def tOTUmap(taxDict):
+    index = []
+    tax_tOTU = {}
+    data = []
+    i = 1
+    for zOTU in taxDict:
+        index.append(zOTU)
+        tax = taxDict[zOTU]
+        if tax not in tax_tOTU:
+            tOTU = 'tOtu' + str(i)
+            tax_tOTU[tax] = tOTU
+            taxList = [tOTU, tax]
+            i += 1
+        else:
+            taxList = [tax_tOTU[tax], tax]
+        data.append(taxList)
+    columns = ['tOTU', 'taxonomy']
+    otuDf = pd.DataFrame(data, index=index, columns=columns)
+    return otuDf
+
 def buildOTUtable(sampleIDs, usearchHits):
     seeds = []
     otuTable = []
