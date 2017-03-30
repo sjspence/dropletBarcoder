@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import pandas as pd
+from itertools import combinations
 
 #Within each sample, group by barcode; assign each barcode a list of zOTUs
 #for each read that contains that barcode (i.e. list can contain redundancies)
@@ -112,7 +113,7 @@ def tOTU_singletonAbundances(barcodeDict, taxDict):
         for otu in abundances[s]:
             relAbund[otu] = float(abundances[s][otu]) / totals[s]
         relAbundances[s] = relAbund
-    relDf = pd.DataFrame.from_dict(relAbundances)
+    relDf = pd.DataFrame.from_dict(relAbundances).fillna(0)
     return relDf
 
 #Create a dataframe mapping each unique taxonomy-otu (tOTU) pair to the number
@@ -145,5 +146,5 @@ def tOTU_quantifyPairs(barcodeDict, taxDict):
                             else:
                                 pairs[p] += 1
         pairDict[s] = pairs
-    pairDf = pd.DataFrame.from_dict(pairDict)
+    pairDf = pd.DataFrame.from_dict(pairDict).fillna(0)
     return pairDf
