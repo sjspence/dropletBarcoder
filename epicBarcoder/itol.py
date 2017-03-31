@@ -79,8 +79,25 @@ def itolConnections(pairDf, outDirectory, tag, color):
                 continue
             otu1 = pair.split('__')[0]
             otu2 = pair.split('__')[1]
-            outFile.write(otu1 + ',' + otu2 + ',' + str(pairDf[samp][pair]) + \
-			  ',' + color + '\n')
+            outFile.write(otu1 + ',' + otu2 + ',' + str(pairDf[samp][pair]) \
+			  + ',' + color + '\n')
         outFile.close()
     outZip = outDirectory[0:len(outDirectory)-1] + '.zip'
     os.system('zip -r ' + outZip + ' ' + outDirectory)
+
+#Turn a dataframe of otu:taxonomy designations into a popup text file for
+#input to iTol
+#INPUT:  otuDf, a pandas dataframe with otu IDs as rows and taxonomic 
+#	     information in the first column
+#        outFile, path to output text file
+#OUTPUT: iTol popup file written to outFile path, with node ID maintained in
+#	     the popup along with taxonomic info
+def itolHover(otuDf, outFile):
+    with open(outFile, 'w') as f:
+        f.write('POPUP_INFO\n')
+        f.write('SEPARATOR COMMA\n')
+        f.write('DATA\n')
+        firstCol = otuDf.columns.values[0]
+        for index in list(otuDf.index.values):
+            f.write(index + ',' + index + ',' + otuDf[firstCol][index] + \
+		    '\n')
