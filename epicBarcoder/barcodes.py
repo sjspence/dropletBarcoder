@@ -4,6 +4,7 @@ import pandas as pd
 from itertools import combinations
 import taxonomy as tx
 from scipy.stats import poisson
+import math
 
 #Within each sample, group by barcode; assign each barcode a list of zOTUs
 #for each read that contains that barcode (i.e. list can contain redundancies)
@@ -170,10 +171,12 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
             mu = a1 * a2 * totals[samp]
             p = poisson.pmf(x, mu)
             if p < cutoff:
+		if p == 0.0:
+		    p = 1e-100
                 if x < mu:
-                    neg[pair] = x
+                    neg[pair] = math.fabs(math.log10(p))
                 else:
-                    pos[pair] = x
+                    pos[pair] = math.fabs(math.log10(p))
         posPairs[samp] = pos
         negPairs[samp] = neg
     posDf = pd.DataFrame.from_dict(posPairs).fillna(0)
