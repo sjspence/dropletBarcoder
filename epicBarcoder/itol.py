@@ -69,7 +69,7 @@ def itolConnections(pairDf, outDirectory, tag, color):
         outFile.write('DATASET_CONNECTION\n')
         outFile.write('SEPARATOR COMMA\n')
         outFile.write('DATASET_LABEL,' + samp + '_' + tag + '\n')
-        outFile.write('COLOR,#ff0ff0\n')
+        outFile.write('COLOR,' + color + '\n')
         outFile.write('DRAW_ARROWS,0\n')
         outFile.write('MAXIMUM_LINE_WIDTH,10\n')
         outFile.write('CENTER_CURVES,1\nALIGN_TO_LABELS,1\n')
