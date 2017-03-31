@@ -133,11 +133,11 @@ def tOTU_quantifyPairs(barcodeDict, taxDict):
 #	     e.g. tOTU_quantifyPairs()
 #        abundanceDf, a dataframe with samples as columns, otus as rows, and
 #	     relative abundance data
-#        cutoff, a p-value used to cutoff significant associations
+#        cutoff, a p-value float used to cutoff significant associations
 #        barcodingLog, path to log file for total barcode counts
 #OUTPUT: posDf, dataframe with significant positive pairings for every sample
 #        negDf, dataframe with significant negative pairings for every sample
-def pickSigPairs(pairDf, abundanceDf, cutoff, barcodingLog):
+def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
     #Import total singleton counts to use as estimates of cell count
     totals = {}
     with open(barcodingLog, 'r') as logFile:
