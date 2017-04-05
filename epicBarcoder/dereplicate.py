@@ -16,6 +16,24 @@ def getUniqueSeqs(inReads, outFasta):
     outFile.close()
     return uniqueSeqs
 
+#Translate unoise2 output and SINTAX output into headers of original reads
+#Input: reads imported from denoised otus
+#	taxonomic dictionary imported from sintax output
+#	unique dictionary created by getUniqueSeqs
+#Output: a file is written with primer-filtered reads, plus otu and tax
+#	information in their headers
+def otuToHeaders(otuReads, taxInfo, unique, outFileName):
+    outFile = open(outFileName, 'w')
+    for otu in otuReads:
+        for read in unique[otu.seq]:
+            otuID = otu.header.replace('>','').split(';')[0]
+            finalTax = taxInfo[otu.header.replace('>','')][1]
+            newHeader = read.header + ';' + otuID + ';tax=' + finalTax + ';'
+            outFile.write(newHeader + '\n')
+            outFile.write(read.seq + '\n')
+    outFile.close()
+
+#Written specifically for uparse output
 def uniqueSeqsToOTU(uparseMap):
     otuToHeaders = {}
     i = 1
