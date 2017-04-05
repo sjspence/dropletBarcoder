@@ -54,7 +54,7 @@ def summarizeBarcoding(barcodeDict, sampIDs, outFileName):
                 replicates += 1
             elif(len(set(barcodeDict[s][bc])) > 1):
                 multiplets += 1
-        outList = outList + map(str, [singletons, replicates, multiplets])
+        outList = outList + list(map(str, [singletons, replicates, multiplets]))
         outFile.write('\t'.join(outList) + '\n')
     outFile.close()
 
