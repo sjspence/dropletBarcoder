@@ -49,7 +49,6 @@ DATA
 #9606,Homo sapiens info popup,Detailed stuff
 '''
 
-
 def generate_id(size=6):
     """ Generate random sequences of characters for temporary file names.
     """
