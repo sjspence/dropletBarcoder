@@ -2,7 +2,7 @@
 
 import pandas as pd
 from itertools import combinations
-import taxonomy as tx
+from . import taxonomy as tx
 from scipy.stats import poisson
 import math
 
