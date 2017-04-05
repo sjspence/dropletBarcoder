@@ -1,4 +1,4 @@
-from .reads import importFasta, exportFasta, removeFwdPrimer, \
+from .reads import importFasta, removeFwdPrimer, \
 	removeFwdRevPrimer, filtBarcodePrimers, trimLength, selectSamples, \
 	removeSamples, splitByDegenerate
 from .pairedEnds import pairConcatenate, readPairList
