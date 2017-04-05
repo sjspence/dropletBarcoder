@@ -2,12 +2,7 @@
 from itertools import groupby
 import pandas as pd
 
-def exportFasta(reads, outFileName):
-    outFile = open(outFileName, 'w')
-    for read in reads:
-        outFile.write(read.header + '\n')
-        outFile.write(read.seq + '\n')
-    outFile.close()
+import pandas as pd
 
 def exportPairedFasta(pairedReads, outFileName, outFileNameN):
     outFile = open(outFileName, 'w')
@@ -33,22 +28,6 @@ def exportOTUtable(df, taxDict, taxType, outFileName):
         outFile.write(index + '\t')
         outFile.write('\t'.join(map(str, data.tolist())) + '\t')
         outFile.write('\t'.join(taxDict[index]) + '\n')
-
-#Import SINTAX taxonomy
-#Input: usearch SINTAX taxonomy file name
-#Output: python dictionary mapping otu header to 
-#        list [taxonomy probabilities, final taxonomy]
-def importSintax(inFileName):
-    taxDict = {}
-    inFile = open(inFileName, 'r')
-    for line in inFile:
-        line = line.strip().split('\t')
-        otuHeader = line[0]
-        taxProbs = line[1]
-        tax = line[3]
-        taxDict[otuHeader] = [taxProbs, tax]
-    inFile.close()
-    return taxDict
 
 #Include the path to a text file output from a Qiime OTU table and
 #a true/false statement indicating if there is taxonomic information
