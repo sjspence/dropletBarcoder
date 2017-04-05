@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import reads as rd
-import taxonomy as tx
+from . import reads as rd
+from . import taxonomy as tx
 
 def makeTreeConstraint(inFileName, outFileName):
     inFile = open(inFileName, 'r')
