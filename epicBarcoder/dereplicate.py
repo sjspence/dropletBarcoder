@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import reads as rd
+from . import reads as rd
 
 #Collapse identical reads into representative sequences to reduce the file
 #size for usearch
