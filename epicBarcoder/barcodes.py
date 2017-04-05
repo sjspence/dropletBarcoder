@@ -116,13 +116,13 @@ def tOTU_quantifyPairs(barcodeDict, taxDict):
                         tOTUs.append(otuDf['tOTU'][zOTU])
                     unique_tOTUs = list(set(tOTUs))
                     if len(unique_tOTUs) > 1:
-			pairList = []
+                        pairList = []
 			#Sort observed pairs and join into unique ids
-			for comb in combinations(unique_tOTUs, 2):
-			    sortComb = list(comb)
-			    sortComb.sort()
-			    pairList.append('__'.join(sortComb))
-			pairList = list(set(pairList))
+                        for comb in combinations(unique_tOTUs, 2):
+                            sortComb = list(comb)
+                            sortComb.sort()
+                            pairList.append('__'.join(sortComb))
+                        pairList = list(set(pairList))
                         for p in pairList:
                             if p not in pairs:
                                 pairs[p] = 1
@@ -171,8 +171,8 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
             mu = a1 * a2 * totals[samp]
             p = poisson.pmf(x, mu)
             if p < cutoff:
-		if p == 0.0:
-		    p = 1e-100
+                if p == 0.0:
+                    p = 1e-100
                 if x < mu:
                     neg[pair] = math.fabs(math.log10(p))
                 else:

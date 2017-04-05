@@ -42,7 +42,7 @@ def itolSimpleBar(df, outDirectory):
         outFile.write('DATASET_SIMPLEBAR\nSEPARATOR COMMA\n')
         outFile.write('DATASET_LABEL,' + samp + '_abund\n')
         outFile.write('COLOR,#547261\n')
-	outFile.write('WIDTH,100\n')
+        outFile.write('WIDTH,100\n')
         outFile.write('DATA\n')
         for otu in list(df.index.values):
             outFile.write(otu + ',' + str(df[samp][otu]) + '\n')

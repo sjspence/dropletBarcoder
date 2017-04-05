@@ -17,10 +17,10 @@ def importSintax(inFileName, completeness):
         otuID = line[0].split(' ')[0].split(';')[0]
         taxProbs = line[1]
         tax = line[3]
-	if completeness == 'full':
+        if completeness == 'full':
             taxDict[otuID] = [taxProbs, tax]
-	elif completeness == 'final':
-	    taxDict[otuID] = tax
+        elif completeness == 'final':
+            taxDict[otuID] = tax
     inFile.close()
     return taxDict
 
