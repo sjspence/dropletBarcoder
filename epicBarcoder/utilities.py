@@ -580,6 +580,7 @@ def process_unoise_fasta(input_file, seq_type):
 def output_itol_files(seqs, sintax):
     barcodeDict = barcodes.createBarcodeDict(seqs)
     taxDict = taxonomy.importSintax(sintax, 'final')
+    otuDf = taxonomy.tOTUmap(taxDict)
     pairDf = barcodes.tOTU_quantifyPairs(barcodeDict, taxDict)
     abundanceDf = barcodes.tOTU_singletonAbundances(barcodeDict, taxDict)
     itol.itolSimpleBar(abundanceDf, '09_itol_abundances/')
