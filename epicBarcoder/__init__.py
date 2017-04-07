@@ -9,7 +9,8 @@ from .utilities import clusterWithUsearch, filter_significant_connections, \
         process_fastq_and_mapping_file, add_otus_to_fasta, \
         output_functions, fasta_to_bc_otu_table, \
         get_grouped_table, make_otus_and_assign, \
-        process_unoise_fasta, BarcodeContainer
+        process_unoise_fasta, BarcodeContainer, \
+        output_itol_files
 from .otuTables import buildOTUtable, invertHits
 from .usearch_io import importClusterFast
 from .itol import itolHeatmap, itolSimpleBar, itolConnections, itolHover

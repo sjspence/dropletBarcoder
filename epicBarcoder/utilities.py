@@ -10,6 +10,9 @@ import pandas as pd
 from . import io
 from . import dereplicate
 from . import reads
+from . import barcodes
+from . import taxonomy
+from . import itol
 
 
 env = os.environ
@@ -571,3 +574,24 @@ def process_unoise_fasta(input_file, seq_type):
         new_seq_id = " ".join(seq_id_split[:-1]) + " " + bc + " sequence_type=" + seq_type + " OTU=" + otu
         acc.append([new_seq_id, seq])
     return acc
+
+#seqs: 08_all_seqs_tax.fa
+#sintax 07_denoised.sintax
+def output_itol_files(seqs, sintax):
+    barcodeDict = barcodes.createBarcodeDict(seqs)
+    taxDict = taxonomy.importSintax(sintax, 'final')
+    pairDf = barcodes.tOTU_quantifyPairs(barcodeDict, taxDict)
+    abundanceDf = barcodes.tOTU_singletonAbundances(barcodeDict, taxDict)
+    itol.itolSimpleBar(abundanceDf, '09_itol_abundances/')
+    itol.itolConnections(pairDf, '09_itol_allConnect/', 'all', '#999999')
+    posDf, negDf = barcode.pickSigPairs(pairDf, abundanceDf, '08_barcoding_log.txt', 1e-3)
+    itol.itolConnections(posDf, '09_itol_pos/', 'pos', '#c14343')
+    itol.itolConnections(negDf, '09_itol_neg/', 'neg', '#3e40a0')
+    tOTUdict = {}
+    for index in list(otuDf.index.values):
+        tax = otuDf['taxonomy'][index]
+        tOTU = otuDf['tOTU'][index]
+        tOTUdict[tOTU] = tax.replace(',','_')
+    tOTU_column = {'taxonomy': tOTUdict}
+    tOTUdf = pd.DataFrame.from_dict(tOTU_column)
+    itol.itolHover(tOTUdf, '09_itol_hover.txt')
