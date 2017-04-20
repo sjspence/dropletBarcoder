@@ -575,8 +575,6 @@ def process_unoise_fasta(input_file, seq_type):
         acc.append([new_seq_id, seq])
     return acc
 
-#seqs: 08_all_seqs_tax.fa
-#sintax 07_denoised.sintax
 def output_itol_files(seqs, sintax):
     barcodeDict = barcodes.createBarcodeDict(seqs)
     taxDict = taxonomy.importSintax(sintax, 'final')
