@@ -575,7 +575,7 @@ def process_unoise_fasta(input_file, seq_type):
         acc.append([new_seq_id, seq])
     return acc
 
-def output_itol_files(seqs, sintax):
+def output_itol_files(seqs, sintax, p_val):
     barcodeDict = barcodes.createBarcodeDict(seqs)
     taxDict = taxonomy.importSintax(sintax, 'final')
     otuDf = taxonomy.tOTUmap(taxDict)
@@ -583,7 +583,8 @@ def output_itol_files(seqs, sintax):
     abundanceDf = barcodes.tOTU_singletonAbundances(barcodeDict, taxDict)
     itol.itolSimpleBar(abundanceDf, '09_itol_abundances/')
     itol.itolConnections(pairDf, '09_itol_allConnect/', 'all', '#999999')
-    posDf, negDf = barcodes.pickSigPairs(pairDf, abundanceDf, '08_barcoding_log.txt', 1e-3)
+    corrected_p_val = p_val / len(pairDf)
+    posDf, negDf = barcodes.pickSigPairs(pairDf, abundanceDf, '08_barcoding_log.txt', corrected_p_val)
     itol.itolConnections(posDf, '09_itol_pos/', 'pos', '#c14343')
     itol.itolConnections(negDf, '09_itol_neg/', 'neg', '#3e40a0')
     tOTUdict = {}
