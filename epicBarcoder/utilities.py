@@ -583,8 +583,7 @@ def output_itol_files(seqs, sintax, p_val):
     abundanceDf = barcodes.tOTU_singletonAbundances(barcodeDict, taxDict)
     itol.itolSimpleBar(abundanceDf, '09_itol_abundances/')
     itol.itolConnections(pairDf, '09_itol_allConnect/', 'all', '#999999')
-    corrected_p_val = p_val / len(pairDf)
-    posDf, negDf = barcodes.pickSigPairs(pairDf, abundanceDf, '08_barcoding_log.txt', corrected_p_val)
+    posDf, negDf = barcodes.pickSigPairs(pairDf, abundanceDf, '08_barcoding_log.txt', p_val)
     itol.itolConnections(posDf, '09_itol_pos/', 'pos', '#c14343')
     itol.itolConnections(negDf, '09_itol_neg/', 'neg', '#3e40a0')
     tOTUdict = {}
