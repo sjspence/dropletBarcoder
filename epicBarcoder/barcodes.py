@@ -170,7 +170,7 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
             x = pairDf[samp][pair]
             mu = a1 * a2 * totals[samp]
             p = poisson.pmf(x, mu)
-            bonferroni_cutoff = cutoff / len(pairDf[samp])
+            bonferroni_cutoff = cutoff * len(pairDf[samp])
             if p < bonferroni_cutoff:
                 if p == 0.0:
                     p = 1e-100

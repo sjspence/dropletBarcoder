@@ -590,7 +590,7 @@ def output_itol_files(seqs, sintax, p_val):
     for index in list(otuDf.index.values):
         tax = otuDf['taxonomy'][index]
         tOTU = otuDf['tOTU'][index]
-        tOTUdict[tOTU] = tax.replace(',','_')
+        tOTUdict[tOTU] = tax.replace(',', '_')
     tOTU_column = {'taxonomy': tOTUdict}
     tOTUdf = pd.DataFrame.from_dict(tOTU_column)
     itol.itolHover(tOTUdf, '09_itol_hover.txt')
