@@ -232,7 +232,7 @@ def filter_significant_connections(conn, abu):
     pairwise_tot = pd.merge(pairwise_abu, conn, left_on=['Left', 'Right'], right_on=[0, 1])
     pairwise_tot = pairwise_tot.loc[:, ['Left', 'Right', 'Lambda', 2]]
     pairwise_tot.columns = ['Left', 'Right', 'Lambda', 'Observed']
-    pairwise_tot['p-val'] = poisson.pmf(pairwise_tot['Observed'], pairwise_tot['Lambda'])
+    pairwise_tot['p-val'] = poisson.pmf(pairwise_tot['Observed'], pairwise_tot['Lambda']) * len(pairwise_tot)
     return pairwise_tot
 
 
