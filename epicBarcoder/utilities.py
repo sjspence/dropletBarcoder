@@ -575,12 +575,29 @@ def process_unoise_fasta(input_file, seq_type):
         acc.append([new_seq_id, seq])
     return acc
 
-def output_itol_files(seqs, sintax, p_val):
+
+def get_samp_ids(mapping_file):
+    sampIDs = []
+    mapping = {}
+    readCounts = {}
+    with open(mapping_file, 'r') as inFile:
+        for line in inFile:
+            if '#' not in line:
+                line = line.strip().split('\t')
+                mapping[line[1]] = line[0].replace('_', 's')
+                readCounts[line[1]] = 0
+                sampIDs.append(line[0].replace('_', 's'))
+    return sampIDs, mapping, readCounts
+
+
+def output_itol_files(seqs, sintax, mapping_file, p_val):
     barcodeDict = barcodes.createBarcodeDict(seqs)
     taxDict = taxonomy.importSintax(sintax, 'final')
     otuDf = taxonomy.tOTUmap(taxDict)
     pairDf = barcodes.tOTU_quantifyPairs(barcodeDict, taxDict)
     abundanceDf = barcodes.tOTU_singletonAbundances(barcodeDict, taxDict)
+    sampIDs, _, _ = get_samp_ids(mapping_file)
+    barcodes.summarizeBarcoding(barcodeDict, sampIDs, '08_barcoding_log.txt')
     itol.itolSimpleBar(abundanceDf, '09_itol_abundances/')
     itol.itolConnections(pairDf, '09_itol_allConnect/', 'all', '#999999')
     posDf, negDf = barcodes.pickSigPairs(pairDf, abundanceDf, '08_barcoding_log.txt', p_val)
