@@ -193,11 +193,9 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
                 #     p = 1e-100
                 if x < mu:
                     # neg[pair] = math.fabs(math.log10(p))
-                    neg_p[pair] = bonferroni_p
                     neg[pair] = x
                 else:
                     # pos[pair] = math.fabs(math.log10(p))
-                    pos_p[pair] = bonferroni_p
                     pos[pair] = x
         posPairs[samp] = pos
         negPairs[samp] = neg
