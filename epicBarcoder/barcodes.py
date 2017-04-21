@@ -152,10 +152,14 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
                 line = line.strip().split('\t')
                 totals[line[0]] = float(line[2])
     posPairs = {}
+    pos_p_pairs = {}
     negPairs = {}
+    neg_p_pairs = {}
     for samp in pairDf:
         pos = {}
+        pos_p = {}
         neg = {}
+        neg_p = {}
         for pair in list(pairDf.index.values):
             otu1 = pair.split('__')[0]
             otu2 = pair.split('__')[1]
@@ -183,17 +187,25 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
                 bonferroni_p = p * (pairDf[samp] > 0).value_counts().loc[True]
             except KeyError:
                 bonferroni_p = 1
+
+            ### Prepare the significant connection dictionaries
             if bonferroni_p < cutoff:
                 # if p == 0.0:
                 #     p = 1e-100
                 if x < mu:
                     # neg[pair] = math.fabs(math.log10(p))
+                    neg_p[pair] = bonferroni_p
                     neg[pair] = x
                 else:
                     # pos[pair] = math.fabs(math.log10(p))
+                    pos_p[pair] = bonferroni_p
                     pos[pair] = x
         posPairs[samp] = pos
+        pos_p_pairs[samp] = pos_p
         negPairs[samp] = neg
+        neg_p_pairs[samp] = neg_p
     posDf = pd.DataFrame.from_dict(posPairs).fillna(0)
     negDf = pd.DataFrame.from_dict(negPairs).fillna(0)
+    pd.DataFrame.from_dict(pos_p_pairs).fillna(0).to_csv("pos_ps.csv")
+    pd.DataFrame.from_dict(neg_p_pairs).fillna(0).to_csv("neg_ps.csv")
     return posDf, negDf
