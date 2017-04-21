@@ -200,7 +200,7 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
         posPairs[samp] = pos
         negPairs[samp] = neg
         p_pairs[samp] = tot
-    posDf = pd.DataFrame.from_dict(posPairs).fillna(0)
-    negDf = pd.DataFrame.from_dict(negPairs).fillna(0)
+    posDf = pd.DataFrame.from_dict(posPairs).fillna(1000)
+    negDf = pd.DataFrame.from_dict(negPairs).fillna(1000)
     pd.DataFrame.from_dict(p_pairs).fillna(0).to_csv("p_vals.csv")
     return posDf, negDf
