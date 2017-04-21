@@ -179,7 +179,10 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
 
             ### Calculate the observation likelihood, including Bonferroni correction
             p = poisson.pmf(x, mu)
-            bonferroni_p = p * (pairDf[samp] > 0).value_counts().loc[True]
+            try:
+                bonferroni_p = p * (pairDf[samp] > 0).value_counts().loc[True]
+            except KeyError:
+                bonferroni_p = 1
             if bonferroni_p < cutoff:
                 # if p == 0.0:
                 #     p = 1e-100
