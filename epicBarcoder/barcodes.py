@@ -159,6 +159,9 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
         for pair in list(pairDf.index.values):
             otu1 = pair.split('__')[0]
             otu2 = pair.split('__')[1]
+
+            ### Grab the OTU abundance data from abundanceDf
+            ### OTU1 abundance: a1, OTU2 abundance: a2
             try:
                 a1 = abundanceDf[samp][otu1]
             except KeyError:
@@ -167,19 +170,25 @@ def pickSigPairs(pairDf, abundanceDf, barcodingLog, cutoff):
                 a2 = abundanceDf[samp][otu2]
             except KeyError:
                 a2 = 0.0
+
+            ### Extract x: observed pair count
             x = pairDf[samp][pair]
+
+            ### Calculate the Poisson lambda
             mu = a1 * a2 * totals[samp]
+
+            ### Calculate the observation likelihood, including Bonferroni correction
             p = poisson.pmf(x, mu)
-            bonferroni_p = p * len(pairDf[samp])
-            # bonferroni_cutoff = cutoff * len(pairDf[samp])
-            # if p < bonferroni_cutoff:
+            bonferroni_p = p * (pairDf[samp] > 0).value_counts().loc[True]
             if bonferroni_p < cutoff:
-                if p == 0.0:
-                    p = 1e-100
+                # if p == 0.0:
+                #     p = 1e-100
                 if x < mu:
-                    neg[pair] = math.fabs(math.log10(p))
+                    # neg[pair] = math.fabs(math.log10(p))
+                    neg[pair] = x
                 else:
-                    pos[pair] = math.fabs(math.log10(p))
+                    # pos[pair] = math.fabs(math.log10(p))
+                    pos[pair] = x
         posPairs[samp] = pos
         negPairs[samp] = neg
     posDf = pd.DataFrame.from_dict(posPairs).fillna(0)
